@@ -58,7 +58,7 @@ const addToCart = (product) => {
 
   const canAccess = (page) => {
     if (!user) {
-      return ['home', 'login', 'contact', 'retail','product-detail','cart'].includes(page);
+      return ['home', 'login', 'contact', 'retail','product-detail','cart','checkout'].includes(page);
     }
     const role = user.role?.toLowerCase();
     if (role === 'admin') return true; 
@@ -68,7 +68,7 @@ const addToCart = (product) => {
       case 'farmer':
         return ['home', 'supply', 'dashboard', 'contact'].includes(page);
       case 'business':
-        return ['home', 'supply', 'suppliers', 'dashboard', 'contact','farm-profile'].includes(page);
+        return ['home', 'supply', 'suppliers', 'contact','farm-profile'].includes(page);
       default:
         return ['home', 'contact'].includes(page);
     }
@@ -95,11 +95,11 @@ const addToCart = (product) => {
       case 'suppliers':
         return <SuppliersPage onNavigate={handleNavigate} />;
       case 'checkout':
-        return <CheckoutPage onNavigate={handleNavigate} cart={cart} />;
+        return <CheckoutPage onNavigate={handleNavigate} cart={cart} setCart={setCart}  />;
       case 'dashboard':
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
       case 'login':
-        return <LoginPage onNavigate={handleLoginSuccess} />;
+        return <LoginPage onNavigate={handleLoginSuccess} setCart={setCart} />;
       case 'contact':
         return <ContactPage />;
       default:

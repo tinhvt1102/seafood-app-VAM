@@ -1,19 +1,30 @@
 import { useState } from 'react';
 import { CreditCard, Wallet, Banknote } from 'lucide-react';
 
-export function CheckoutPage({ onNavigate, cart = [] }) {
+export function CheckoutPage({ onNavigate, cart = [], setCart }) {
   const [paymentMethod, setPaymentMethod] = useState('bank');
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 50000 : 0;
   const total = subtotal + shipping;
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (cart.length === 0) {
-      alert('Giỏ hàng của bạn đang trống!');
+    if (!cart || cart.length === 0) {
+      alert('Giỏ hàng của bạn đang trống, không thể thanh toán!');
       return;
     }
-    alert('Đặt hàng thành công!');
+    const orderData = {
+      items: cart,
+      total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0) + 50000,
+      date: new Date().toISOString(),
+    };
+    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    localStorage.setItem('orders', JSON.stringify([...existingOrders, orderData]));
+    if (typeof setCart === 'function') {
+      setCart([]);
+    }
+    localStorage.removeItem('cart');
+    alert('Đặt hàng thành công! Cảm ơn bạn đã tin tưởng chúng tôi.');
+    window.scrollTo(0, 0);
     onNavigate('home');
   };
 
@@ -26,12 +37,12 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="mb-6" style={{ color: '#0A2647' }}>Thông tin giao hàng</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm mb-2">Họ và tên *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     className="w-full p-3 border rounded-md"
                     style={{ borderColor: '#e5e7eb' }}
@@ -40,8 +51,8 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
                 </div>
                 <div>
                   <label className="block text-sm mb-2">Số điện thoại *</label>
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     required
                     pattern="[0-9]{10,11}"
                     className="w-full p-3 border rounded-md"
@@ -53,8 +64,8 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
 
               <div className="mt-4">
                 <label className="block text-sm mb-2">Email</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   className="w-full p-3 border rounded-md"
                   style={{ borderColor: '#e5e7eb' }}
                   placeholder="email@example.com"
@@ -63,8 +74,8 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
 
               <div className="mt-4">
                 <label className="block text-sm mb-2">Địa chỉ giao hàng *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   className="w-full p-3 border rounded-md mb-3"
                   style={{ borderColor: '#e5e7eb' }}
@@ -111,7 +122,7 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
 
               <div className="mt-4">
                 <label className="block text-sm mb-2">Ghi chú đơn hàng (tuỳ chọn)</label>
-                <textarea 
+                <textarea
                   rows={3}
                   className="w-full p-3 border rounded-md"
                   style={{ borderColor: '#e5e7eb' }}
@@ -124,14 +135,13 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="mb-6" style={{ color: '#0A2647' }}>Phương thức thanh toán</h2>
               <div className="space-y-3">
-                <label 
-                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer ${
-                    paymentMethod === 'bank' ? 'border-[#00BCD4] bg-blue-50' : 'border-gray-200'
-                  }`}
+                <label
+                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer ${paymentMethod === 'bank' ? 'border-[#00BCD4] bg-blue-50' : 'border-gray-200'
+                    }`}
                 >
-                  <input 
-                    type="radio" 
-                    name="payment" 
+                  <input
+                    type="radio"
+                    name="payment"
                     value="bank"
                     checked={paymentMethod === 'bank'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
@@ -140,14 +150,13 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
                   <CreditCard className="w-5 h-5" style={{ color: '#0A2647' }} />
                   <span>Chuyển khoản ngân hàng</span>
                 </label>
-                <label 
-                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer ${
-                    paymentMethod === 'ewallet' ? 'border-[#00BCD4] bg-blue-50' : 'border-gray-200'
-                  }`}
+                <label
+                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer ${paymentMethod === 'ewallet' ? 'border-[#00BCD4] bg-blue-50' : 'border-gray-200'
+                    }`}
                 >
-                  <input 
-                    type="radio" 
-                    name="payment" 
+                  <input
+                    type="radio"
+                    name="payment"
                     value="ewallet"
                     checked={paymentMethod === 'ewallet'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
@@ -156,14 +165,13 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
                   <Wallet className="w-5 h-5" style={{ color: '#0A2647' }} />
                   <span>Ví điện tử (Momo, ZaloPay)</span>
                 </label>
-                <label 
-                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer ${
-                    paymentMethod === 'cod' ? 'border-[#00BCD4] bg-blue-50' : 'border-gray-200'
-                  }`}
+                <label
+                  className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer ${paymentMethod === 'cod' ? 'border-[#00BCD4] bg-blue-50' : 'border-gray-200'
+                    }`}
                 >
-                  <input 
-                    type="radio" 
-                    name="payment" 
+                  <input
+                    type="radio"
+                    name="payment"
                     value="cod"
                     checked={paymentMethod === 'cod'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
@@ -193,7 +201,7 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
           <div>
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-20">
               <h3 className="mb-4" style={{ color: '#0A2647' }}>Đơn hàng của bạn</h3>
-              
+
               <div className="space-y-3 mb-4 pb-4 border-b max-h-[300px] overflow-y-auto" style={{ borderColor: '#e5e7eb' }}>
                 {cart.length > 0 ? (
                   cart.map((item) => (
@@ -226,7 +234,7 @@ export function CheckoutPage({ onNavigate, cart = [] }) {
                   {total.toLocaleString('vi-VN')}đ
                 </span>
               </div>
-              <button 
+              <button
                 type="submit"
                 className="w-full py-3 rounded-md text-white hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: '#00BCD4' }}
