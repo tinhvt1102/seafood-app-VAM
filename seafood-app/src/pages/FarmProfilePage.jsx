@@ -3,54 +3,214 @@ import { SupplyCard } from '../components/SupplyCard';
 
 
 export function FarmProfilePage({ farmId }) {
-  const farm = {
+  const farms = [
+  {
+    id: '1',
     name: 'Hộ nuôi Hải Sản Phát Đạt',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcXVhY3VsdHVyZSUyMGZhcm0lMjBwb25kfGVufDF8fHx8MTc3MjcxMTU0Nnww&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzaHJpbXAlMjBmYXJtaW5nJTIwYXNpYXxlbnwxfHx8fDE3NzI3MTE1NDZ8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
     location: 'Huyện Thới Bình, Cà Mau',
     rating: 5,
     reviews: 128,
     verified: true,
     certifications: ['VietGAP', 'GlobalGAP', 'ISO 22000'],
-    description: 'Hộ nuôi Hải Sản Phát Đạt là một trong những cơ sở nuôi tôm hàng đầu tại Cà Mau với hơn 15 năm kinh nghiệm. Chúng tôi cam kết cung cấp hải sản tươi sống chất lượng cao, nuôi theo tiêu chuẩn VietGAP và GlobalGAP. Diện tích ao nuôi: 30 ha. Sản lượng: 20-25 tấn/tháng.',
+    description: 'Hộ nuôi Hải Sản Phát Đạt là một trong những cơ sở nuôi tôm hàng đầu tại Cà Mau với hơn 15 năm kinh nghiệm. Cơ sở chuyên cung cấp tôm sú và tôm thẻ chất lượng cao.',
     phone: '0901 234 567',
     email: 'phatdat@seafood.vn',
-    established: '2010'
-  };
+    established: '2010',
+    supplies: [
+      {
+        id: '1',
+        species: 'Tôm sú size 20-25',
+        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '20-25 con/kg',
+        harvestTime: '15/03/2026',
+        quantity: '5 tấn',
+        location: 'Cà Mau',
+        farmerName: 'Hộ nuôi Phát Đạt'
+      },
+      {
+        id: '2',
+        species: 'Tôm thẻ size 60-70',
+        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '60-70 con/kg',
+        harvestTime: '10/03/2026',
+        quantity: '3 tấn',
+        location: 'Cà Mau',
+        farmerName: 'Hộ nuôi Phát Đạt'
+      }
+    ]
+  },
+  {
+    id: '2',
+    name: 'Hộ nuôi Thủy Sản Miền Tây',
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    location: 'An Giang',
+    rating: 5,
+    reviews: 95,
+    verified: true,
+    certifications: ['VietGAP', 'ASC'],
+    description: 'Hộ nuôi Thủy Sản Miền Tây chuyên cung cấp cá tra và cá basa từ vùng nuôi An Giang. Sản phẩm phù hợp cho chế biến thực phẩm và xuất khẩu.',
+    phone: '0902 345 678',
+    email: 'mientay@seafood.vn',
+    established: '2012',
+    supplies: [
+      {
+        id: '3',
+        species: 'Cá Tra',
+        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '0.8-1.2 kg/con',
+        harvestTime: '20/03/2026',
+        quantity: '10 tấn',
+        location: 'An Giang',
+        farmerName: 'Hộ nuôi Miền Tây'
+      },
+      {
+        id: '4',
+        species: 'Cá Basa',
+        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '1.0-1.5 kg/con',
+        harvestTime: '22/03/2026',
+        quantity: '15 tấn',
+        location: 'An Giang',
+        farmerName: 'Hộ nuôi Miền Tây'
+      }
+    ]
+  },
+  {
+    id: '3',
+    name: 'Hộ nuôi Hải Phong',
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    location: 'Bạc Liêu',
+    rating: 4,
+    reviews: 67,
+    verified: false,
+    certifications: ['VietGAP'],
+    description: 'Hộ nuôi Hải Phong là cơ sở nuôi tôm thẻ tại Bạc Liêu, tập trung vào nguồn hàng ổn định và chất lượng cho thị trường nội địa.',
+    phone: '0903 456 789',
+    email: 'haiphong@seafood.vn',
+    established: '2015',
+    supplies: [
+      {
+        id: '5',
+        species: 'Tôm thẻ chân trắng',
+        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '60-70 con/kg',
+        harvestTime: '10/03/2026',
+        quantity: '3 tấn',
+        location: 'Bạc Liêu',
+        farmerName: 'Hộ nuôi Hải Phong'
+      }
+    ]
+  },
+  {
+    id: '4',
+    name: 'Hộ nuôi Hải Sản Vạn Phát',
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    location: 'Sóc Trăng',
+    rating: 5,
+    reviews: 143,
+    verified: true,
+    certifications: ['VietGAP', 'GlobalGAP', 'ASC'],
+    description: 'Hộ nuôi Hải Sản Vạn Phát chuyên cung cấp tôm sú tại Sóc Trăng với sản lượng lớn, phù hợp cho nhà hàng, đại lý và doanh nghiệp thu mua.',
+    phone: '0904 567 890',
+    email: 'vanphat@seafood.vn',
+    established: '2009',
+    supplies: [
+      {
+        id: '6',
+        species: 'Tôm sú xuất khẩu',
+        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '15-20 con/kg',
+        harvestTime: '18/03/2026',
+        quantity: '8 tấn',
+        location: 'Sóc Trăng',
+        farmerName: 'Hộ nuôi Vạn Phát'
+      }
+    ]
+  },
+  {
+    id: '5',
+    name: 'Hộ nuôi Thủy Sản Đồng Bằng',
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    location: 'Đồng Tháp',
+    rating: 4,
+    reviews: 82,
+    verified: true,
+    certifications: ['VietGAP'],
+    description: 'Hộ nuôi Thủy Sản Đồng Bằng cung cấp cá tra và cá basa từ Đồng Tháp, có sản lượng ổn định theo tháng.',
+    phone: '0905 678 901',
+    email: 'dongbang@seafood.vn',
+    established: '2014',
+    supplies: [
+      {
+        id: '7',
+        species: 'Cá Tra',
+        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '0.8-1.2 kg/con',
+        harvestTime: '24/03/2026',
+        quantity: '12 tấn',
+        location: 'Đồng Tháp',
+        farmerName: 'Hộ nuôi Đồng Bằng'
+      },
+      {
+        id: '8',
+        species: 'Cá Basa',
+        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '1.0-1.5 kg/con',
+        harvestTime: '26/03/2026',
+        quantity: '15 tấn',
+        location: 'Đồng Tháp',
+        farmerName: 'Hộ nuôi Đồng Bằng'
+      }
+    ]
+  },
+  {
+    id: '6',
+    name: 'Hộ nuôi Hải Sản Nam Bộ',
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    location: 'Kiên Giang',
+    rating: 5,
+    reviews: 76,
+    verified: true,
+    certifications: ['VietGAP', 'GlobalGAP'],
+    description: 'Hộ nuôi Hải Sản Nam Bộ chuyên cung cấp cua và ghẹ tươi sống tại Kiên Giang, nguồn hàng phù hợp cho nhà hàng và chợ đầu mối.',
+    phone: '0906 789 012',
+    email: 'nambo@seafood.vn',
+    established: '2011',
+    supplies: [
+      {
+        id: '9',
+        species: 'Cua biển',
+        image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '300-400g/con',
+        harvestTime: '12/03/2026',
+        quantity: '2 tấn',
+        location: 'Kiên Giang',
+        farmerName: 'Hộ nuôi Nam Bộ'
+      },
+      {
+        id: '10',
+        species: 'Ghẹ xanh',
+        image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+        size: '4-6 con/kg',
+        harvestTime: '16/03/2026',
+        quantity: '3 tấn',
+        location: 'Kiên Giang',
+        farmerName: 'Hộ nuôi Nam Bộ'
+      }
+    ]
+  }
+];
 
-  const supplies = [
-    {
-      id: '1',
-      species: 'Tôm sú size 20-25',
-      image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHNocmltcCUyMHNlYWZvb2R8ZW58MXx8fHwxNzcyNjA3NzAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-      size: '20-25 con/kg',
-      harvestTime: '15/03/2026',
-      quantity: '5 tấn',
-      location: 'Cà Mau',
-      farmerName: 'Hộ nuôi Phát Đạt'
-    },
-    {
-      id: '2',
-      species: 'Tôm thẻ size 60-70',
-      image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHNocmltcCUyMHNlYWZvb2R8ZW58MXx8fHwxNzcyNjA3NzAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-      size: '60-70 con/kg',
-      harvestTime: '10/03/2026',
-      quantity: '3 tấn',
-      location: 'Cà Mau',
-      farmerName: 'Hộ nuôi Phát Đạt'
-    },
-    {
-      id: '3',
-      species: 'Tôm sú xuất khẩu',
-      image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHNocmltcCUyMHNlYWZvb2R8ZW58MXx8fHwxNzcyNjA3NzAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-      size: '15-20 con/kg',
-      harvestTime: '18/03/2026',
-      quantity: '8 tấn',
-      location: 'Cà Mau',
-      farmerName: 'Hộ nuôi Phát Đạt'
-    }
-  ];
+const farm = farms.find((item) => item.id === farmId) || farms[0];
 
+const supplies = farm.supplies;
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Cover Image */}

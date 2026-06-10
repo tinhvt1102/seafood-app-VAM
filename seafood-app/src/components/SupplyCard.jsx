@@ -1,9 +1,9 @@
 import { Calendar, MapPin, Package } from 'lucide-react';
 
-
 export function SupplyCard({
   species,
   image,
+  hoverimage,
   size,
   harvestTime,
   quantity,
@@ -12,18 +12,25 @@ export function SupplyCard({
   onClick
 }) {
   return (
+
     <div 
-      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border cursor-pointer"
+      className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border cursor-pointer"
       style={{ borderColor: '#e5e7eb' }}
       onClick={onClick}
     >
-      <div className="aspect-[4/3] overflow-hidden rounded-t-lg bg-gray-100">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-t-lg bg-gray-100">
         <img 
           src={image} 
           alt={species}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0"
+        />
+        <img 
+          src={hoverimage || image} 
+          alt={species}
+          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
         />
       </div>
+
       <div className="p-4">
         <h3 className="mb-3" style={{ color: '#0A2647' }}>{species}</h3>
         

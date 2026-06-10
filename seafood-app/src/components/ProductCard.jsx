@@ -2,6 +2,7 @@ import { Star, MapPin, ShoppingCart } from 'lucide-react';
 
 export function ProductCard({ 
   image, 
+  hoverimage,
   name, 
   price, 
   origin, 
@@ -12,17 +13,24 @@ export function ProductCard({
 }) {
   return (
     <div 
-      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border"
+      className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border"
       style={{ borderColor: '#e5e7eb' }}
       onClick={onClick}
     >
-      <div className="aspect-square overflow-hidden rounded-t-lg bg-gray-100">
+      <div className="relative aspect-square overflow-hidden rounded-t-lg bg-gray-100">
         <img 
           src={image} 
           alt={name}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0"
+        />
+        
+        <img 
+          src={hoverimage || image} 
+          alt={name}
+          className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
         />
       </div>
+
       <div className="p-4">
         <h3 className="text-sm mb-2 line-clamp-2 min-h-[2.5rem]" style={{ color: '#0A2647' }}>
           {name}

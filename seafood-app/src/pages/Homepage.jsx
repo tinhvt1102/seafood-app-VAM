@@ -36,19 +36,67 @@ export function Homepage({ onNavigate }) {
   }, [banners.length]);
 
   const featuredSupply = [
-    { id: '1', species: 'Tôm sú', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', size: '20-25 con/kg', harvestTime: '15/03/2026', quantity: '5 tấn', location: 'Cà Mau', farmerName: 'Nguyễn Văn A' },
-    { id: '2', species: 'Cá Tra', image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080', size: '0.8-1.2 kg/con', harvestTime: '20/03/2026', quantity: '10 tấn', location: 'An Giang', farmerName: 'Trần Thị B' },
-    { id: '3', species: 'Tôm thẻ chân trắng', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', size: '60-70 con/kg', harvestTime: '10/03/2026', quantity: '3 tấn', location: 'Bạc Liêu', farmerName: 'Lê Văn C' },
-    { id: '4', species: 'Cua biển', image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?q=80&w=1080', size: '300-400g/con', harvestTime: '12/03/2026', quantity: '2 tấn', location: 'Kiên Giang', farmerName: 'Phạm Văn D' }
+    { id: '1', species: 'Tôm sú', 
+      image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', 
+      size: '20-25 con/kg', 
+      harvestTime: '15/03/2026', 
+      quantity: '5 tấn', 
+      location: 'Cà Mau', 
+      farmerName: 'Nguyễn Văn A' },
+    
+    { id: '2', species: 'Cá Tra', image: 'https://i.postimg.cc/g2wJgkn1/Ca-tra-phi-le-tuoi.png', size: '0.8-1.2 kg/con', harvestTime: '20/03/2026', quantity: '10 tấn', location: 'An Giang', farmerName: 'Trần Thị B' },
+    { id: '3', species: 'Tôm thẻ chân trắng', image: 'https://i.postimg.cc/ydy2mcB1/tom-the-chan-trang.png', size: '60-70 con/kg', harvestTime: '10/03/2026', quantity: '3 tấn', location: 'Bạc Liêu', farmerName: 'Lê Văn C' },
+    { id: '4', species: 'Ghẹ biển', 
+      image: 'https://i.postimg.cc/Gp2j7DkR/82eeed2b-b7fd-46db-b76c-c916c1ae3915.png', 
+      hoverimage:'https://i.postimg.cc/wjtvwT18/ghe-xanh.png',
+      size: '300-400g/con', harvestTime: '12/03/2026', 
+      quantity: '2 tấn', 
+      location: 'Kiên Giang', 
+      farmerName: 'Phạm Văn D' },
+      { id: '5', species: 'Cua biển', 
+      image: 'https://i.postimg.cc/jqQJf57k/cua-bien.png', 
+      size: '300-400g/con', harvestTime: '05/06/2026', 
+      quantity: '2 tấn', 
+      location: 'Cà mau', 
+      farmerName: 'Đoàn Văn Q' },
+      { id: '6', species: 'Mực ống', 
+      image: 'https://i.postimg.cc/XNw9gLTH/muc.png', 
+      size: '100-200g/con', harvestTime: '05/06/2026', 
+      quantity: '1 tấn', 
+      location: 'Vũng Tàu', 
+      farmerName: 'Nguyễn Thanh P' }
   ];
 
   const retailProducts = [
-    { id: '1', name: 'Tôm sú tươi sống size 20-25', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', price: '450.000đ/kg', origin: 'Cà Mau', rating: 5, reviews: 42 },
-    { id: '2', name: 'Cá Tra phi lê tươi nguyên chất', image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080', price: '85.000đ/kg', origin: 'An Giang', rating: 5, reviews: 156 },
-    { id: '3', name: 'Cua biển tươi sống', image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?q=80&w=1080', price: '320.000đ/kg', origin: 'Kiên Giang', rating: 4, reviews: 38 },
-    { id: '4', name: 'Mực tươi nguyên con', image: 'https://images.unsplash.com/photo-1762305195844-94479ea6aca4?q=80&w=1080', price: '180.000đ/kg', origin: 'Vũng Tàu', rating: 5, reviews: 29 },
-    { id: '5', name: 'Tôm thẻ chân trắng size 60-70', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', price: '280.000đ/kg', origin: 'Bạc Liêu', rating: 5, reviews: 73 },
-    { id: '6', name: 'Hải sản tổng hợp', image: 'https://images.unsplash.com/photo-1596563976996-e5dc9a1990c9?q=80&w=1080', price: '550.000đ/combo', origin: 'Nhiều vùng', rating: 5, reviews: 91 }
+    { id: '1', 
+      name: 'Tôm sú tươi sống size 20-25', 
+      image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', 
+      price: '450.000đ/kg', origin: 'Cà Mau', 
+      rating: 5, 
+      reviews: 42 },
+    { id: '2', 
+      name: 'Cá Tra phi lê tươi', 
+      image: 'https://i.postimg.cc/g2wJgkn1/Ca-tra-phi-le-tuoi.png', 
+      price: '85.000đ/kg', 
+      origin: 'An Giang', 
+      rating: 5, 
+      reviews: 156 },
+    { id: '3', name: 'Cua biển tươi sống', 
+      image: 'https://i.postimg.cc/jqQJf57k/cua-bien.png', 
+      price: '320.000đ/kg', 
+      origin: 'Kiên Giang', 
+      rating: 4, 
+      reviews: 38 },
+    { id: '4', name: 'Mực tươi', image: 'https://i.postimg.cc/XNw9gLTH/muc.png', price: '180.000đ/kg', origin: 'Vũng Tàu', rating: 5, reviews: 29 },
+    { id: '5', name: 'Tôm thẻ chân trắng size 60-70', image: 'https://i.postimg.cc/ydy2mcB1/tom-the-chan-trang.png', price: '280.000đ/kg', origin: 'Bạc Liêu', rating: 5, reviews: 73 },
+    { id: '6', name: 'Hải sản tổng hợp', image: 'https://images.unsplash.com/photo-1596563976996-e5dc9a1990c9?q=80&w=1080', price: '550.000đ/combo', origin: 'Nhiều vùng', rating: 5, reviews: 91 },
+    { id: '7', name: 'Ghẹ biển', 
+      image: 'https://i.postimg.cc/Gp2j7DkR/82eeed2b-b7fd-46db-b76c-c916c1ae3915.png',
+      hoverimage:'https://i.postimg.cc/wjtvwT18/ghe-xanh.png', 
+      price: '800.000đ/kg', 
+      origin: 'Cà Mau', 
+      rating: 5, 
+      reviews: 99 }
   ];
 
   // 2. lọc dữ liệu dựa trên searchTerm

@@ -12,6 +12,10 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { ContactPage } from './pages/ContactPage';
+import { B2BCartPage } from './pages/B2BCartPage';
+import { ListingManagementPage } from './pages/ListingManagementPage';
+import { OrderManagementPage } from './pages/OrderManagementPage';
+import { SellerCenterPage } from './pages/SellerCenterPage';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -102,6 +106,14 @@ const addToCart = (product) => {
         return <LoginPage onNavigate={handleLoginSuccess} setCart={setCart} />;
       case 'contact':
         return <ContactPage />;
+      case 'b2b-cart':
+        return <B2BCartPage onNavigate={handleNavigate} />;
+      case 'listing-management':
+        return <ListingManagementPage onNavigate={handleNavigate} />;
+      case 'order-management':
+        return <OrderManagementPage onNavigate={handleNavigate} />;
+      case 'seller-center':
+        return <SellerCenterPage onNavigate={handleNavigate} />;
       default:
         return <Homepage onNavigate={handleNavigate} />;
     }

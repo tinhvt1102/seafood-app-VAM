@@ -3,73 +3,252 @@ import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck } from 'lucide-reac
 import { ProductCard } from '../components/ProductCard';
 
 
-export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
+export function ProductDetailPage({ productId, onNavigate }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const product = {
+  const products = [
+  {
+    id: '1',
     name: 'Tôm sú tươi sống size 20-25',
     images: [
-      'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHNocmltcCUyMHNlYWZvb2R8ZW58MXx8fHwxNzcyNjA3NzAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaXNoJTIwbWFya2V0JTIwc2VhZm9vZHxlbnwxfHx8fDE3NzI3MTE1NDR8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZWFmb29kJTIwbWFya2V0JTIwdmlldG5hbXxlbnwxfHx8fDE3NzI3MTE1NDV8MA&ixlib=rb-4.1.0&q=80&w=1080'
+      'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
     ],
+    image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
     price: '450.000đ',
     originalPrice: '550.000đ',
-    rating: 5,
+    rating: 4,
     reviews: 42,
     sold: 127,
     origin: 'Cà Mau',
     size: '20-25 con/kg',
     harvestDate: '05/03/2026',
-    description: 'Tôm sú tươi sống được nuôi theo tiêu chuẩn VietGAP, đảm bảo chất lượng và an toàn thực phẩm. Tôm có kích cỡ đồng đều, thịt chắc, ngọt tự nhiên. Phù hợp để chế biến các món ăn cao cấp.',
+    description: 'Tôm sú tươi sống được nuôi theo tiêu chuẩn VietGAP, đảm bảo chất lượng và an toàn thực phẩm. Tôm có kích cỡ đồng đều, thịt chắc, ngọt tự nhiên.',
     supplier: {
       name: 'Hộ nuôi Hải Sản Phất Đạt',
       verified: true,
       rating: 5,
       location: 'Cà Mau'
     }
-  };
-
-  const similarProducts = [
-    {
-      id: '2',
-      name: 'Tôm thẻ chân trắng size 60-70',
-      image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHNocmltcCUyMHNlYWZvb2R8ZW58MXx8fHwxNzcyNjA3NzAwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-      price: '280.000đ/kg',
-      origin: 'Bạc Liêu',
-      rating: 5,
-      reviews: 73
-    },
-    {
-      id: '3',
-      name: 'Cua biển tươi sống',
-      image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmFiJTIwc2VhZm9vZCUyMGZyZXNofGVufDF8fHx8MTc3MjYzNTMzM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-      price: '320.000đ/kg',
-      origin: 'Kiên Giang',
+  },
+  {
+    id: '2',
+    name: 'Cá Tra phi lê tươi nguyên chất',
+    images: [
+      'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080',
+    price: '85.000đ',
+    originalPrice: '100.000đ',
+    rating: 3,
+    reviews: 156,
+    sold: 320,
+    origin: 'An Giang',
+    size: 'Phi lê 500g/gói',
+    harvestDate: '04/03/2026',
+    description: 'Cá Tra phi lê tươi, thịt trắng, mềm, ít xương, phù hợp để chiên, kho hoặc chế biến món ăn gia đình.',
+    supplier: {
+      name: 'Trang trại cá An Giang',
+      verified: true,
       rating: 4,
-      reviews: 38
-    },
-    {
-      id: '4',
-      name: 'Mực tươi nguyên con',
-      image: 'https://images.unsplash.com/photo-1762305195844-94479ea6aca4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcXVpZCUyMGZyZXNoJTIwc2VhZm9vZHxlbnwxfHx8fDE3NzI3MTE1NDV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      price: '180.000đ/kg',
-      origin: 'Vũng Tàu',
-      rating: 5,
-      reviews: 29
-    },
-    {
-      id: '5',
-      name: 'Hải sản tổng hợp',
-      image: 'https://images.unsplash.com/photo-1596563976996-e5dc9a1990c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZWFmb29kJTIwcGxhdGUlMjBmcmVzaHxlbnwxfHx8fDE3NzI3MTE1NDd8MA&ixlib=rb-4.1.0&q=80&w=1080',
-      price: '550.000đ/combo',
-      origin: 'Nhiều vùng',
-      rating: 5,
-      reviews: 91
+      location: 'An Giang'
     }
-  ];
+  },
+  {
+    id: '3',
+    name: 'Cua biển tươi sống',
+    images: [
+      'https://i.postimg.cc/jqQJf57k/cua-bien.png',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://i.postimg.cc/jqQJf57k/cua-bien.png',
+    price: '320.000đ',
+    originalPrice: '390.000đ',
+    rating: 5,
+    reviews: 38,
+    sold: 89,
+    origin: 'Kiên Giang',
+    size: '3-4 con/kg',
+    harvestDate: '05/03/2026',
+    description: 'Cua biển tươi sống, chắc thịt, gạch nhiều, được tuyển chọn từ vùng biển Kiên Giang.',
+    supplier: {
+      name: 'Vựa hải sản Kiên Giang',
+      verified: true,
+      rating: 5,
+      location: 'Kiên Giang'
+    }
+  },
+  {
+    id: '4',
+    name: 'Mực tươi nguyên con',
+    images: [
+      'https://images.unsplash.com/photo-1762305195844-94479ea6aca4?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://images.unsplash.com/photo-1762305195844-94479ea6aca4?q=80&w=1080',
+    price: '180.000đ',
+    originalPrice: '220.000đ',
+    rating: 5,
+    reviews: 29,
+    sold: 76,
+    origin: 'Vũng Tàu',
+    size: '5-7 con/kg',
+    harvestDate: '05/03/2026',
+    description: 'Mực tươi nguyên con, thân dày, thịt ngọt, phù hợp hấp, nướng, xào hoặc nhúng lẩu.',
+    supplier: {
+      name: 'Hải sản Vũng Tàu Fresh',
+      verified: true,
+      rating: 5,
+      location: 'Vũng Tàu'
+    }
+  },
+  {
+    id: '5',
+    name: 'Tôm thẻ chân trắng size 60-70',
+    images: [
+      'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+    price: '280.000đ',
+    originalPrice: '330.000đ',
+    rating: 4,
+    reviews: 73,
+    sold: 145,
+    origin: 'Bạc Liêu',
+    size: '60-70 con/kg',
+    harvestDate: '04/03/2026',
+    description: 'Tôm thẻ chân trắng tươi, kích cỡ đồng đều, phù hợp chế biến món ăn hằng ngày.',
+    supplier: {
+      name: 'Hộ nuôi tôm Bạc Liêu',
+      verified: true,
+      rating: 4,
+      location: 'Bạc Liêu'
+    }
+  },
+  {
+    id: '6',
+    name: 'Hải sản tổng hợp',
+    images: [
+      'https://images.unsplash.com/photo-1596563976996-e5dc9a1990c9?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://images.unsplash.com/photo-1596563976996-e5dc9a1990c9?q=80&w=1080',
+    price: '550.000đ',
+    originalPrice: '650.000đ',
+    rating: 3,
+    reviews: 91,
+    sold: 201,
+    origin: 'Nhiều vùng',
+    size: 'Combo 2kg',
+    harvestDate: '05/03/2026',
+    description: 'Combo hải sản tổng hợp gồm nhiều loại hải sản tươi, phù hợp cho gia đình hoặc tiệc nhỏ.',
+    supplier: {
+      name: 'Vựa hải sản tổng hợp',
+      verified: true,
+      rating: 4,
+      location: 'Nhiều vùng'
+    }
+  },
+  {
+    id: '7',
+    name: 'Ghẹ xanh tươi sống',
+    images: [
+      'https://i.postimg.cc/Gp2j7DkR/82eeed2b-b7fd-46db-b76c-c916c1ae3915.png',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://i.postimg.cc/wjtvwT18/ghe-xanh.png',
+    price: '380.000đ',
+    originalPrice: '450.000đ',
+    rating: 4,
+    reviews: 54,
+    sold: 88,
+    origin: 'Cà Mau',
+    size: '4-6 con/kg',
+    harvestDate: '05/03/2026',
+    description: 'Ghẹ xanh tươi sống, thịt ngọt, chắc, được đóng gói và vận chuyển trong ngày.',
+    supplier: {
+      name: 'Hải sản Cà Mau',
+      verified: true,
+      rating: 4,
+      location: 'Cà Mau'
+    }
+  },
+  {
+    id: '8',
+    name: 'Tôm hùm Alaska',
+    images: [
+      'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+    price: '1.200.000đ',
+    originalPrice: '1.400.000đ',
+    rating: 5,
+    reviews: 112,
+    sold: 58,
+    origin: 'Nhập khẩu',
+    size: '1-1.5kg/con',
+    harvestDate: '03/03/2026',
+    description: 'Tôm hùm Alaska nhập khẩu, thịt chắc, vị ngọt tự nhiên, phù hợp cho các món hấp, nướng bơ tỏi.',
+    supplier: {
+      name: 'Seafood Import Việt Nam',
+      verified: true,
+      rating: 5,
+      location: 'Nhập khẩu'
+    }
+  },
+  {
+    id: '9',
+    name: 'Cá Hồi Na Uy phi lê',
+    images: [
+      'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080',
+      'https://images.unsplash.com/photo-1637679242615-0ddbbb34b7d7?q=80&w=1080',
+      'https://images.unsplash.com/photo-1723132925908-9d155ac2611e?q=80&w=1080'
+    ],
+    image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080',
+    price: '650.000đ',
+    originalPrice: '750.000đ',
+    rating: 3,
+    reviews: 203,
+    sold: 410,
+    origin: 'Nhập khẩu',
+    size: 'Phi lê 500g/gói',
+    harvestDate: '03/03/2026',
+    description: 'Cá hồi Na Uy phi lê, giàu dinh dưỡng, phù hợp làm sashimi, áp chảo hoặc salad.',
+    supplier: {
+      name: 'Seafood Import Việt Nam',
+      verified: true,
+      rating: 5,
+      location: 'Nhập khẩu'
+    }
+  }
+];
 
+const product = products.find((item) => item.id === productId) || products[0];
+
+const similarProducts = products
+  .filter((item) => item.id !== product.id)
+  .slice(0, 4)
+  .map((item) => ({
+    id: item.id,
+    name: item.name,
+    image: item.image,
+    price: `${item.price}/kg`,
+    origin: item.origin,
+    rating: item.rating,
+    reviews: item.reviews
+  }));
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -78,8 +257,8 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
             {/* Image Gallery */}
             <div>
               <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-                <img
-                  src={product.images[selectedImage]}
+                <img 
+                  src={product.images[selectedImage]} 
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -89,8 +268,9 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 ${selectedImage === index ? 'border-[#00BCD4]' : 'border-transparent'
-                      }`}
+                    className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 ${
+                      selectedImage === index ? 'border-[#00BCD4]' : 'border-transparent'
+                    }`}
                   >
                     <img src={image} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -101,7 +281,7 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
             {/* Product Info */}
             <div>
               <h1 className="mb-4" style={{ color: '#0A2647' }}>{product.name}</h1>
-
+              
               <div className="flex items-center gap-4 mb-4 pb-4 border-b" style={{ borderColor: '#e5e7eb' }}>
                 <div className="flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (
@@ -147,20 +327,20 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
                 <label className="block text-sm mb-2" style={{ color: '#0A2647' }}>Số lượng (kg)</label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border rounded-md" style={{ borderColor: '#e5e7eb' }}>
-                    <button
+                    <button 
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="p-2 hover:bg-gray-50"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <input
-                      type="number"
+                    <input 
+                      type="number" 
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                       className="w-16 text-center border-x"
                       style={{ borderColor: '#e5e7eb' }}
                     />
-                    <button
+                    <button 
                       onClick={() => setQuantity(quantity + 1)}
                       className="p-2 hover:bg-gray-50"
                     >
@@ -172,36 +352,16 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
               </div>
 
               <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    const productToCart = {
-                      id: productId,
-                      name: product.name,
-                      price: 450000,
-                      image: product.images[0],
-                      quantity: quantity
-                    };
-                    onAddToCart(productToCart);
-                    onNavigate('cart');
-                  }}
+                <button 
+                  onClick={() => onNavigate('cart')}
                   className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                   style={{ borderColor: '#0A2647', color: '#0A2647' }}
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Thêm vào giỏ
                 </button>
-                <button
-                  onClick={() => {
-                    const productToCart = {
-                      id: productId,
-                      name: product.name,
-                      price: 450000,
-                      image: product.images[0],
-                      quantity: quantity
-                    };
-                    onAddToCart(productToCart);
-                    onNavigate('checkout');
-                  }}
+                <button 
+                  onClick={() => onNavigate('checkout')}
                   className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity"
                   style={{ backgroundColor: '#00BCD4' }}
                 >
@@ -223,9 +383,9 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcXVhY3VsdHVyZSUyMGZhcm0lMjBwb25kfGVufDF8fHx8MTc3MjcxMTU0Nnww&ixlib=rb-4.1.0&q=80&w=1080"
-                    alt=""
+                  <img 
+                    src="https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcXVhY3VsdHVyZSUyMGZhcm0lMjBwb25kfGVufDF8fHx8MTc3MjcxMTU0Nnww&ixlib=rb-4.1.0&q=80&w=1080" 
+                    alt="" 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -248,7 +408,7 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
                   </div>
                 </div>
               </div>
-              <button
+              <button 
                 onClick={() => onNavigate('farm-profile', '1')}
                 className="px-6 py-2 border rounded-md hover:bg-white transition-colors text-sm"
                 style={{ borderColor: '#0A2647', color: '#0A2647' }}
@@ -263,12 +423,11 @@ export function ProductDetailPage({ productId, onNavigate, onAddToCart }) {
         <div>
           <h2 className="mb-6" style={{ color: '#0A2647' }}>Sản phẩm tương tự</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {similarProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                {...p}
-                onClick={() => onNavigate('product-detail', p.id)}
-                onAddToCart={() => onAddToCart({ ...p, price: parseInt(p.price.replace(/\D/g, "")) })}
+            {similarProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                {...product} 
+                onClick={() => onNavigate('product-detail', product.id)}
               />
             ))}
           </div>
