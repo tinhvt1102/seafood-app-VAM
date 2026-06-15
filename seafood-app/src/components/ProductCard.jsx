@@ -17,13 +17,16 @@ export function ProductCard({
       style={{ borderColor: '#e5e7eb' }}
       onClick={onClick}
     >
+      {/* Khung chứa ảnh: Giữ cấu trúc tuyệt đối của Code 1 để phục vụ hiệu ứng đổi ảnh */}
       <div className="relative aspect-square overflow-hidden rounded-t-lg bg-gray-100">
+        {/* Ảnh gốc: Sẽ ẩn đi khi hover vào card */}
         <img 
           src={image} 
           alt={name}
           className="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0"
         />
         
+        {/* Ảnh khi hover: Xuất hiện đè lên ảnh gốc */}
         <img 
           src={hoverimage || image} 
           alt={name}
@@ -32,13 +35,18 @@ export function ProductCard({
       </div>
 
       <div className="p-4">
+        {/* Tên sản phẩm */}
         <h3 className="text-sm mb-2 line-clamp-2 min-h-[2.5rem]" style={{ color: '#0A2647' }}>
           {name}
         </h3>
+        
+        {/* Xuất xứ */}
         <div className="flex items-center gap-1 mb-2">
           <MapPin className="w-3 h-3 text-gray-400" />
           <span className="text-xs text-gray-600">{origin}</span>
         </div>
+        
+        {/* Đánh giá Stars */}
         <div className="flex items-center gap-1 mb-3">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -50,6 +58,8 @@ export function ProductCard({
           ))}
           <span className="text-xs text-gray-500 ml-1">({reviews})</span>
         </div>
+        
+        {/* Giá và Nút thêm vào giỏ hàng */}
         <div className="flex items-center justify-between">
           <span className="font-bold" style={{ color: '#d4183d' }}>
             {price}
@@ -58,8 +68,10 @@ export function ProductCard({
             className="p-2 rounded-full hover:opacity-80 transition-opacity"
             style={{ backgroundColor: '#00BCD4' }}
             onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart();
+              e.stopPropagation(); // Ngăn sự kiện click lan ra thẻ cha (onClick của Card)
+              if (onAddToCart) {  // Kiểm tra an toàn trước khi gọi hàm
+                onAddToCart();
+              }
             }}
           >
             <ShoppingCart className="w-4 h-4 text-white" />

@@ -7,7 +7,16 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem('currentUser'));
+  // TỐI ƯU 1: Chỉ đọc localStorage một lần duy nhất khi component khởi tạo
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('currentUser');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error("Lỗi parse thông tin user từ localStorage:", error);
+      return null;
+    }
+  });
 
   const menuItems = [
     { id: 'home', label: 'Trang chủ', roles: ['all'] },
@@ -23,22 +32,19 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
     { id: 'seller-center', label: 'Seller Center', roles: ['buyer', 'business', 'farmer', 'admin'] },
   ];
 
-  // Lọc danh sách theo quyền người dùng
+  // TỐI ƯU 3: Lọc danh sách an toàn với Optional Chaining đề phòng user dữ liệu trống
   const filteredMenu = menuItems.filter(item => {
     if (item.roles.includes('all')) return true;
     if (!user) return item.roles.includes('guest');
-    return item.roles.includes(user.role);
+    return item.roles.includes(user?.role || '');
   });
 
-  // Tự động phân tách: Cố định 4 mục đầu tiên, còn lại đưa vào "Xem thêm"
   const MAX_VISIBLE_ITEMS = 4;
   const visibleMenu = filteredMenu.slice(0, MAX_VISIBLE_ITEMS);
   const dropdownMenu = filteredMenu.slice(MAX_VISIBLE_ITEMS);
 
-  // Kiểm tra xem trang hiện tại có đang nằm ẩn trong menu Dropdown hay không
   const isCurrentPageInDropdown = dropdownMenu.some(item => item.id === currentPage);
 
-  // Đóng dropdown khi click ra ngoài màn hình
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -49,10 +55,13 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // TỐI ƯU 2: Đăng xuất mượt mà bằng cách cập nhật State, không reload toàn bộ trang
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
-    onNavigate('home');
-    window.location.reload();
+    setUser(null); // Clear trạng thái ngay lập tức để Navbar đổi giao diện
+    if (onNavigate) {
+      onNavigate('home');
+    }
   };
 
   return (
@@ -61,17 +70,16 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
         <div className="flex justify-between items-center h-16">
 
           {/* Logo */}
-          <button onClick={() => onNavigate('home')} className="flex-shrink-0">
+          <button onClick={() => onNavigate?.('home')} className="flex-shrink-0">
             <Logo />
           </button>
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
-            {/* Hiển thị các mục cố định */}
             {visibleMenu.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => onNavigate?.(item.id)}
                 className="px-3 py-2 rounded-md transition-colors whitespace-nowrap text-sm font-medium"
                 style={{
                   backgroundColor: currentPage === item.id ? '#0A2647' : 'transparent',
@@ -82,38 +90,34 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
               </button>
             ))}
 
-            {/* Dropdown "DANH MỤC" - Thiết kế đồng bộ theo format trang */}
+            {/* Dropdown "DANH MỤC" */}
             {dropdownMenu.length > 0 && (
               <div className="relative ml-auto pr-2" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="px-3 py-2 rounded-md transition-all whitespace-nowrap text-sm font-medium flex items-center gap-2 hover:bg-gray-100"
                   style={{
-                    // Nếu đang mở hoặc đang ở trang con thuộc danh mục thì đổi màu nền xanh chữ trắng
                     backgroundColor: (isCurrentPageInDropdown || isDropdownOpen) ? '#0A2647' : 'transparent',
                     color: (isCurrentPageInDropdown || isDropdownOpen) ? 'white' : '#0A2647',
                   }}
                 >
-                  {/* Icon 3 dấu gạch ngang thanh lịch */}
                   <Menu className="w-4 h-4" />
                   <span className="font-semibold">DANH MỤC</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${(isDropdownOpen) ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Giao diện cửa sổ nhỏ thả xuống (Dropdown Window) */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-lg shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {dropdownMenu.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => {
-                          onNavigate(item.id);
+                          onNavigate?.(item.id);
                           setIsDropdownOpen(false);
                         }}
                         className="block w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50"
                         style={{
-                          // Nếu trùng trang hiện tại thì đổi màu xanh neon (#00BCD4) giống nút Đăng nhập của bạn
-                          color: currentPage === item.id ? '#00BCD4' : '#0A2647',
+                          color: currentPage === item.id ? '#00_BCD4' : '#0A2647',
                           fontWeight: currentPage === item.id ? '600' : '400',
                           backgroundColor: currentPage === item.id ? '#F0F9FF' : 'transparent',
                         }}
@@ -131,7 +135,7 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
           <div className="hidden lg:flex items-center gap-4">
             {/* GIỎ HÀNG */}
             <button
-              onClick={() => onNavigate('cart')}
+              onClick={() => onNavigate?.('cart')}
               className="p-2 hover:bg-gray-100 rounded-full relative"
             >
               <ShoppingCart className="w-6 h-6" style={{ color: '#0A2647' }} />
@@ -144,7 +148,7 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
 
             {!user ? (
               <button
-                onClick={() => onNavigate('login')}
+                onClick={() => onNavigate?.('login')}
                 className="px-4 py-2 rounded-md text-white hover:opacity-90 font-medium text-sm"
                 style={{ backgroundColor: '#00BCD4' }}
               >
@@ -153,7 +157,9 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
             ) : (
               <div className="flex items-center gap-3 pl-4 border-l">
                 <div className="text-right">
-                  <p className="text-[10px] text-gray-500 font-bold tracking-wider leading-none">{user.role.toUpperCase()}</p>
+                  <p className="text-[10px] text-gray-500 font-bold tracking-wider leading-none">
+                    {user.role?.toUpperCase()}
+                  </p>
                   <p className="text-sm font-bold text-[#0A2647]">{user.name}</p>
                 </div>
                 <button
@@ -174,14 +180,14 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
         </div>
       </div>
 
-      {/* Mobile Menu Giao diện điện thoại (Hiển thị dọc toàn bộ để dễ bấm) */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden border-t bg-white">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {filteredMenu.map((item) => (
               <button
                 key={item.id}
-                onClick={() => { onNavigate(item.id); setIsMobileMenuOpen(false); }}
+                onClick={() => { onNavigate?.(item.id); setIsMobileMenuOpen(false); }}
                 className="block w-full text-left px-3 py-2 rounded-md font-medium text-base"
                 style={{
                   backgroundColor: currentPage === item.id ? '#0A2647' : 'transparent',
@@ -193,7 +199,7 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
             ))}
             {!user ? (
               <button
-                onClick={() => onNavigate('login')}
+                onClick={() => onNavigate?.('login')}
                 className="w-full mt-4 py-3 rounded-md text-white font-bold"
                 style={{ backgroundColor: '#00BCD4' }}
               >
