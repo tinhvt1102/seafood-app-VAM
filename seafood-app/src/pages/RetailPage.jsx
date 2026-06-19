@@ -2,29 +2,47 @@ import { useState, useMemo } from 'react';
 import { Filter, SlidersHorizontal } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 
-// TỐI ƯU 1: Đưa mảng dữ liệu tĩnh ra ngoài Component để tránh tạo lại vùng nhớ khi re-render
-const PRODUCTS_DATA = [
-  { id: '1', name: 'Tôm sú tươi sống size 20-25', category: 'Tôm', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', price: 450000, origin: 'Cà Mau', rating: 4, reviews: 42 },
-  { id: '2', name: 'Cá Tra phi lê tươi nguyên chất', category: 'Cá', image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080', price: 85000, origin: 'An Giang', rating: 3, reviews: 156 },
-  { id: '3', name: 'Cua biển tươi sống', category: 'Cua/Ghẹ', image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?q=80&w=1080', price: 320000, origin: 'Kiên Giang', rating: 5, reviews: 38 },
-  { id: '4', name: 'Mực tươi nguyên con', category: 'Mực', image: 'https://images.unsplash.com/photo-1762305195844-94479ea6aca4?q=80&w=1080', price: 180000, origin: 'Vũng Tàu', rating: 5, reviews: 29 },
-  { id: '5', name: 'Tôm thẻ chân trắng size 60-70', category: 'Tôm', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', price: 280000, origin: 'Bạc Liêu', rating: 4, reviews: 73 },
-  { id: '6', name: 'Hải sản tổng hợp', category: 'Hải sản khác', image: 'https://images.unsplash.com/photo-1596563976996-e5dc9a1990c9?q=80&w=1080', price: 550000, origin: 'Nhiều vùng', rating: 3, reviews: 91 },
-  { id: '7', name: 'Ghẹ xanh tươi sống', category: 'Cua/Ghẹ', image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?q=80&w=1080', price: 380000, origin: 'Cà Mau', rating: 4, reviews: 54 },
-  { id: '8', name: 'Tôm hùm Alaska', category: 'Tôm', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', price: 1200000, origin: 'Nhập khẩu', rating: 5, reviews: 112 },
-  { id: '9', name: 'Cá Hồi Na Uy phi lê', category: 'Cá', image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?q=80&w=1080', price: 650000, origin: 'Nhập khẩu', rating: 3, reviews: 203 }
-];
-
-export function RetailPage({ onNavigate, onAddToCart }) {
+// Nhận prop allProducts từ App.jsx truyền xuống để đồng bộ 100% với Homepage
+export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
   const [showFilters, setShowFilters] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [priceRange, setPriceRange] = useState('Tất cả');
   const [origin, setOrigin] = useState('Tất cả');
   const [minRating, setMinRating] = useState(0);
 
-  // TỐI ƯU 2: Logic lọc mượt mà, chính xác và useMemo hoạt động đúng vai trò
+  // LOGIC PHÒNG THỦ & CHUẨN HÓA DỮ LIỆU: Biến đổi dữ liệu chuỗi thành số và gán danh mục tự động nếu thiếu
+  const processedProducts = useMemo(() => {
+    return allProducts.map(product => {
+      // 1. Chuẩn hóa giá: Chuyển đổi chuỗi "450.000đ" hoặc "450.000đ/kg" thành số 450000 để chạy bộ lọc logic toán học
+      let numericPrice = 0;
+      if (typeof product.price === 'number') {
+        numericPrice = product.price;
+      } else if (typeof product.price === 'string') {
+        numericPrice = parseInt(product.price.replace(/\D/g, ''), 10) || 0;
+      }
+
+      // 2. Tự động nhận diện category dựa trên tên nếu dữ liệu tổng hợp từ App.jsx không có thuộc tính 'category'
+      let category = product.category;
+      if (!category && product.name) {
+        const nameLower = product.name.toLowerCase();
+        if (nameLower.includes('tôm')) category = 'Tôm';
+        else if (nameLower.includes('cá')) category = 'Cá';
+        else if (nameLower.includes('cua') || nameLower.includes('ghẹ')) category = 'Cua/Ghẹ';
+        else if (nameLower.includes('mực')) category = 'Mực';
+        else category = 'Hải sản khác';
+      }
+
+      return {
+        ...product,
+        category: category || 'Hải sản khác',
+        numericPrice: numericPrice
+      };
+    });
+  }, [allProducts]);
+
+  // LOGIC LỌC SẢN PHẨM: Đã được cập nhật để kiểm tra trên kho dữ liệu động processedProducts
   const filteredProducts = useMemo(() => {
-    return PRODUCTS_DATA.filter(product => {
+    return processedProducts.filter(product => {
       // 1. Lọc theo danh mục (nhiều lựa chọn cùng lúc)
       if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) return false;
 
@@ -32,17 +50,25 @@ export function RetailPage({ onNavigate, onAddToCart }) {
       if (origin !== 'Tất cả' && product.origin !== origin) return false;
 
       // 3. Lọc theo số sao đánh giá
-      if (product.rating < minRating) return false;
+      if ((product.rating || 5) < minRating) return false;
 
-      // 4. Lọc theo khoảng giá ngân sách
-      if (priceRange === 'Dưới 100.000đ' && product.price >= 100000) return false;
-      if (priceRange === '100.000đ - 300.000đ' && (product.price < 100000 || product.price > 300000)) return false;
-      if (priceRange === '300.000đ - 500.000đ' && (product.price < 300000 || product.price > 500000)) return false;
-      if (priceRange === 'Trên 500.000đ' && product.price <= 500000) return false;
+      // 4. Lọc theo khoảng giá ngân sách (Dựa trên số numericPrice đã chuẩn hóa sạch)
+      if (priceRange === 'Dưới 100.000đ' && product.numericPrice >= 100000) return false;
+      if (priceRange === '100.000đ - 300.000đ' && (product.numericPrice < 100000 || product.numericPrice > 300000)) return false;
+      if (priceRange === '300.000đ - 500.000đ' && (product.numericPrice < 300000 || product.numericPrice > 500000)) return false;
+      if (priceRange === 'Trên 500.000đ' && product.numericPrice <= 500000) return false;
 
       return true;
     });
-  }, [selectedCategories, priceRange, origin, minRating]);
+  }, [processedProducts, selectedCategories, priceRange, origin, minRating]);
+
+  // Trích xuất động danh sách xuất xứ từ chính allProducts để bộ chọn <select> không bị thiếu vùng
+  const uniqueOrigins = useMemo(() => {
+    const origins = allProducts
+      .map(p => p.origin)
+      .filter(o => o && o.trim() !== '');
+    return ['Tất cả', ...new Set(origins)];
+  }, [allProducts]);
 
   // Handler dọn sạch tất cả trạng thái lọc
   const handleResetFilters = () => {
@@ -130,13 +156,11 @@ export function RetailPage({ onNavigate, onAddToCart }) {
                     className="w-full p-2 border rounded-md text-sm outline-none bg-white focus:ring-1 focus:ring-[#00BCD4] focus:border-[#00BCD4]"
                     style={{ borderColor: '#e5e7eb' }}
                   >
-                    <option value="Tất cả">Tất cả các vùng</option>
-                    <option value="Cà Mau">Cà Mau</option>
-                    <option value="An Giang">An Giang</option>
-                    <option value="Bạc Liêu">Bạc Liêu</option>
-                    <option value="Kiên Giang">Kiên Giang</option>
-                    <option value="Vũng Tàu">Vũng Tàu</option>
-                    <option value="Nhập khẩu">Hàng Nhập khẩu</option>
+                    {uniqueOrigins.map((orig) => (
+                      <option key={orig} value={orig}>
+                        {orig === 'Tất cả' ? 'Tất cả các vùng' : orig}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -180,15 +204,30 @@ export function RetailPage({ onNavigate, onAddToCart }) {
 
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    {...product}
-                    price={`${product.price.toLocaleString('vi-VN')}đ/kg`}
-                    onClick={() => onNavigate('product-detail', product.id)}
-                    onAddToCart={() => onAddToCart(product)}
-                  />
-                ))}
+                {filteredProducts.map((product) => {
+                  const displayPrice = typeof product.price === 'number'
+                    ? `${product.price.toLocaleString('vi-VN')}đ/kg`
+                    : product.price.includes('/kg') ? product.price : `${product.price}/kg`;
+
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      id={product.id}
+                      name={product.name}
+                      image={product.image}
+                      hoverimage={product.hoverimage}
+                      origin={product.origin}
+                      rating={product.rating || 5}
+                      reviews={product.reviews || 30}
+                      price={displayPrice}
+                      onClick={() => onNavigate('product-detail', product.id)}
+                      onAddToCart={() => onAddToCart({
+                        ...product,
+                        price: product.numericPrice
+                      })}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-20 bg-white rounded-lg shadow-sm border border-gray-100">

@@ -44,13 +44,9 @@ export function LoginPage({ onNavigate, setCart }) {
       const user = existingUsers.find(u => u.email === email && u.password === password);
 
       if (user) {
-        localStorage.removeItem('cart');
-        if (setCart) {
-          setCart([]); 
-        }
         localStorage.setItem('currentUser', JSON.stringify(user));
         alert(`Đăng nhập thành công với vai trò: ${user.role}`);
-        onNavigate(`dashboard-${user.role}`);
+        onNavigate('home');
       } else {
         alert('Email/Số điện thoại hoặc mật khẩu không chính xác!');
       }

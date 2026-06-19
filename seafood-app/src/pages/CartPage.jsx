@@ -18,11 +18,9 @@ export function CartPage({ cartItems = [], setCartItems, onNavigate }) {
     setCartItems(items => items.filter(item => item.id !== id));
   };
 
-  // 3. TỐI ƯU HIỆU NĂNG: Sử dụng useMemo để tính toán chi phí đơn hàng.
-  // Chỉ tính toán lại khi `cartItems` thay đổi, giúp tránh re-render lãng phí.
   const { subtotal, shipping, total } = useMemo(() => {
     const sub = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const ship = sub > 0 ? 50000 : 0; // Nếu giỏ hàng trống thì phí ship bằng 0
+    const ship = sub > 0 ? 50000 : 0; 
     return {
       subtotal: sub,
       shipping: ship,
@@ -67,7 +65,7 @@ export function CartPage({ cartItems = [], setCartItems, onNavigate }) {
                         src={item.image} 
                         alt={item.name}
                         className="w-full h-full object-cover"
-                        loading="lazy" // Tối ưu: Lazy load hình ảnh danh sách
+                        loading="lazy"
                       />
                     </div>
                     
@@ -80,7 +78,7 @@ export function CartPage({ cartItems = [], setCartItems, onNavigate }) {
 
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-bold text-lg" style={{ color: '#d4183d' }}>
-                          {formatCurrency(item.price)}/kg
+                          {formatCurrency(item.price)}
                         </span>
                         
                         {/* Bộ điều khiển số lượng & Nút xóa */}

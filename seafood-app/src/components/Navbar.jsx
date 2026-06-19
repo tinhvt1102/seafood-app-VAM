@@ -2,21 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Menu, X, ShoppingCart, LogOut, ChevronDown } from 'lucide-react';
 import { Logo } from './Logo';
 
-export function Navbar({ currentPage, onNavigate, cartCount }) {
+// NHẬN prop user trực tiếp từ App.jsx truyền xuống ở đây
+export function Navbar({ currentPage, onNavigate, cartCount, user }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // TỐI ƯU 1: Chỉ đọc localStorage một lần duy nhất khi component khởi tạo
-  const [user, setUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('currentUser');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch (error) {
-      console.error("Lỗi parse thông tin user từ localStorage:", error);
-      return null;
-    }
-  });
+  // ĐÃ XÓA: Bỏ hoàn toàn dòng const [user, setUser] = useState(...) gây lỗi lệch state cũ
 
   const menuItems = [
     { id: 'home', label: 'Trang chủ', roles: ['all'] },
@@ -32,7 +24,7 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
     { id: 'seller-center', label: 'Seller Center', roles: ['buyer', 'business', 'farmer', 'admin'] },
   ];
 
-  // TỐI ƯU 3: Lọc danh sách an toàn với Optional Chaining đề phòng user dữ liệu trống
+  // Lọc danh sách menu dựa trên prop user động
   const filteredMenu = menuItems.filter(item => {
     if (item.roles.includes('all')) return true;
     if (!user) return item.roles.includes('guest');
@@ -55,13 +47,14 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // TỐI ƯU 2: Đăng xuất mượt mà bằng cách cập nhật State, không reload toàn bộ trang
+  // Đăng xuất gọi hàm chuyển hướng của App để App xóa sạch State user
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
-    setUser(null); // Clear trạng thái ngay lập tức để Navbar đổi giao diện
     if (onNavigate) {
-      onNavigate('home');
+      onNavigate('home'); 
     }
+    // reload nhẹ hoặc ép đổi trạng thái ở App.jsx
+    window.location.reload(); 
   };
 
   return (
@@ -107,7 +100,7 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-lg shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-lg shadow-xl py-2 z-50">
                     {dropdownMenu.map((item) => (
                       <button
                         key={item.id}
@@ -117,7 +110,7 @@ export function Navbar({ currentPage, onNavigate, cartCount }) {
                         }}
                         className="block w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50"
                         style={{
-                          color: currentPage === item.id ? '#00_BCD4' : '#0A2647',
+                          color: currentPage === item.id ? '#00BCD4' : '#0A2647',
                           fontWeight: currentPage === item.id ? '600' : '400',
                           backgroundColor: currentPage === item.id ? '#F0F9FF' : 'transparent',
                         }}

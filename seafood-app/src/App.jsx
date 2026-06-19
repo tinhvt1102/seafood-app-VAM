@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { Homepage } from './pages/Homepage';
+import { Homepage, retailProducts } from './pages/Homepage';
 import { SupplyPage } from './pages/SupplyPage';
 import { SuppliersPage } from './pages/SuppliersPage';
 import { RetailPage } from './pages/RetailPage';
@@ -28,16 +28,27 @@ export default function App() {
   // 1. Tải thông tin User và Giỏ hàng từ LocalStorage khi vào ứng dụng
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) setUser(JSON.parse(savedUser));
-
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) setCartItems(JSON.parse(savedCart));
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
 
-  // 2. Tự động đồng bộ Giỏ hàng vào LocalStorage mỗi khi có thay đổi
+useEffect(() => {
+    const cartKey = user ? `cart_${user.id || user.email}` : 'cart_guest';
+    const savedCart = localStorage.getItem(cartKey);
+    
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
+    } else {
+      setCartItems([]); // Nếu tài khoản này chưa từng mua gì thì set giỏ hàng rỗng
+    }
+  }, [user]); // Bắt buộc phải đưa [user] vào đây để mỗi lần đổi acc là nó tự reload lại giỏ hàng tương ứng
+
+  // 3. Tự động đồng bộ Giỏ hàng vào LocalStorage mỗi khi giỏ hàng HOẶC user thay đổi
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    const cartKey = user ? `cart_${user.id || user.email}` : 'cart_guest';
+    localStorage.setItem(cartKey, JSON.stringify(cartItems));
+  }, [cartItems, user]);
 
   // 3. Hàm thêm vào giỏ hàng thông minh (Đã sửa lỗi biến addQty bằng quantity động)
   const handleAddToCart = (product, quantity = 1) => {
@@ -66,16 +77,22 @@ export default function App() {
     alert(`Đã thêm ${quantity}kg ${product.name} vào giỏ hàng thành công!`);
   };
 
-  // Hàm Mua ngay thông minh: Đồng bộ dữ liệu và chuyển trang lập tức
+  // Hàm Mua ngay thông minh: Chuẩn hóa dữ liệu số trước khi lưu
   const handleBuyNow = (product, quantity = 1) => {
+    // Ép kiểu giá tiền về dạng số thuần túy, loại bỏ mọi ký tự lạ nếu có
+    const cleanPrice = typeof product.price === 'string'
+      ? parseInt(product.price.replace(/[^0-9]/g, ''), 10)
+      : Number(product.price);
+
     const directItem = {
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: cleanPrice || 0, // Đảm bảo không bị undefined/NaN
       image: product.image,
       origin: product.origin,
-      quantity: quantity
+      quantity: Number(quantity)
     };
+
     localStorage.setItem('directCheckoutItem', JSON.stringify(directItem));
     handleNavigate('checkout');
   };
@@ -84,7 +101,7 @@ export default function App() {
   const handleLoginSuccess = (targetPage) => {
     const savedUser = JSON.parse(localStorage.getItem('currentUser'));
     setUser(savedUser);
-    setCurrentPage(targetPage);
+    setCurrentPage('home');
     window.scrollTo(0, 0);
   };
 
@@ -122,14 +139,22 @@ export default function App() {
 
     switch (currentPage) {
       case 'home':
-        return <Homepage onNavigate={handleNavigate} />;
+        return <Homepage onAddToCart={handleAddToCart} onNavigate={handleNavigate} />;
       case 'retail':
-        return <RetailPage onNavigate={handleNavigate} onAddToCart={handleAddToCart} />;
+        return (
+          <RetailPage 
+          allProducts={retailProducts}
+          onNavigate={handleNavigate}
+          onAddToCart={handleAddToCart}
+
+          />
+        );
       case 'product-detail':
         return (
           <ProductDetailPage
             productId={pageData.id}
             onNavigate={handleNavigate}
+            allProducts={retailProducts}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
           />
@@ -142,15 +167,16 @@ export default function App() {
         return <SupplyPage onNavigate={handleNavigate} />;
       case 'suppliers':
         return <SuppliersPage onNavigate={handleNavigate} />;
-      case 'checkout':
-        // Đã đồng bộ prop chính xác sang CheckoutPage: Đổi tên cartItems thành cart, setCartItems thành setCart
+      case 'checkout': {
+        const directItem = JSON.parse(localStorage.getItem('directCheckoutItem'));
         return (
           <CheckoutPage
             onNavigate={handleNavigate}
-            cart={cartItems}
+            cart={directItem ? [directItem] : cartItems}
             setCart={setCartItems}
           />
         );
+      }
       case 'dashboard':
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
       case 'login':
