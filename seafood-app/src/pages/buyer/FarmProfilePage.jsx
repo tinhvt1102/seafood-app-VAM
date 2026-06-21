@@ -1,5 +1,5 @@
 import { Star, MapPin, BadgeCheck, Phone, Mail } from 'lucide-react';
-import { SupplyCard } from '../components/SupplyCard';
+import { SupplyCard } from '../../components/SupplyCard';
 
 
 export function FarmProfilePage({ farmId }) {

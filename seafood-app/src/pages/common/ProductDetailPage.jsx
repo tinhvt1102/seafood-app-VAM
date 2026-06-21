@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck } from 'lucide-react';
-import { ProductCard } from '../components/ProductCard';
+import { ProductCard } from '../../components/ProductCard';
 
 export function ProductDetailPage({ productId, allProducts = [], onNavigate, onAddToCart, onBuyNow }) {
   const [quantity, setQuantity] = useState(1);

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'; // Sử dụng useMemo để tối ưu hiệu năng lọc
 import { Filter, SlidersHorizontal } from 'lucide-react';
-import { SupplyCard } from '../components/SupplyCard';
+import { SupplyCard } from '../../components/SupplyCard';
 
 export function SupplyPage({ onNavigate }) {
   const [showFilters, setShowFilters] = useState(true);

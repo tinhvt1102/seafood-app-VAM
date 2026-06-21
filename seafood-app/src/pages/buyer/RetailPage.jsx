@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Filter, SlidersHorizontal } from 'lucide-react';
-import { ProductCard } from '../components/ProductCard';
+import { ProductCard } from '../../components/ProductCard';
 
 // Nhận prop allProducts từ App.jsx truyền xuống để đồng bộ 100% với Homepage
 export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {

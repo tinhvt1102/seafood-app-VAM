@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, TrendingUp, Users, Truck, X } from 'lucide-react';
-import { CategoryCard } from '../components/CategoryCard';
-import { ProductCard } from '../components/ProductCard';
-import { SupplierCard } from '../components/SupplierCard';
-import { SupplyCard } from '../components/SupplyCard';
+import { CategoryCard } from '../../components/CategoryCard';
+import { ProductCard } from '../../components/ProductCard';
+import { SupplierCard } from '../../components/SupplierCard';
+import { SupplyCard } from '../../components/SupplyCard';
 
 export const retailProducts = [
     { id: 'r-1', name: 'Tôm sú tươi sống size 20-25', image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080', price: '450.000đ/kg', origin: 'Cà Mau', rating: 5, reviews: 42 },

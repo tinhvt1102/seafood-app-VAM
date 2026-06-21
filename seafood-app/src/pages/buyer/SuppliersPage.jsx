@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Filter, SlidersHorizontal } from 'lucide-react';
-import { SupplierCard } from '../components/SupplierCard';
+import { SupplierCard } from '../../components/SupplierCard';
 
 export function SuppliersPage({ onNavigate }) {
   const [showFilters, setShowFilters] = useState(true);

@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { Homepage, retailProducts } from './pages/Homepage';
-import { SupplyPage } from './pages/SupplyPage';
-import { SuppliersPage } from './pages/SuppliersPage';
-import { RetailPage } from './pages/RetailPage';
-import { ProductDetailPage } from './pages/ProductDetailPage';
-import { FarmProfilePage } from './pages/FarmProfilePage';
-import { CartPage } from './pages/CartPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { LoginPage } from './pages/LoginPage';
-import { ContactPage } from './pages/ContactPage';
-import { B2BCartPage } from './pages/B2BCartPage';
-import { ListingManagementPage } from './pages/ListingManagementPage';
-import { OrderManagementPage } from './pages/OrderManagementPage';
-import { SellerCenterPage } from './pages/SellerCenterPage';
+import { Homepage, retailProducts } from './pages/common/Homepage';
+import { SupplyPage } from './pages/buyer/SupplyPage';
+import { SuppliersPage } from './pages/buyer/SuppliersPage';
+import { RetailPage } from './pages/buyer/RetailPage';
+import { ProductDetailPage } from './pages/common/ProductDetailPage';
+import { FarmProfilePage } from './pages/buyer/FarmProfilePage';
+import { CartPage } from './pages/buyer/CartPage';
+import { CheckoutPage } from './pages/buyer/CheckoutPage';
+import { DashboardPage } from './pages/seller/DashboardPage';
+import { LoginPage } from './pages/common/LoginPage';
+import { ContactPage } from './pages/common/ContactPage';
+import { B2BCartPage } from './pages/buyer/B2BCartPage';
+import { ListingManagementPage } from './pages/seller/ListingManagementPage';
+import { OrderManagementPage } from './pages/seller/OrderManagementPage';
+import { SellerCenterPage } from './pages/seller/SellerCenterPage';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
