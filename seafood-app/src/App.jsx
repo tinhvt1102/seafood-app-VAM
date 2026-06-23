@@ -16,6 +16,7 @@ import { B2BCartPage } from './pages/buyer/B2BCartPage';
 import { ListingManagementPage } from './pages/seller/ListingManagementPage';
 import { OrderManagementPage } from './pages/seller/OrderManagementPage';
 import { SellerCenterPage } from './pages/seller/SellerCenterPage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function App() {
@@ -193,6 +194,8 @@ export default function App() {
         return <OrderManagementPage onNavigate={handleNavigate} />;
       case 'seller-center':
         return <SellerCenterPage onNavigate={handleNavigate} />;
+      case 'admin-dashboard':
+        return <AdminDashboardPage onNavigate={handleNavigate} />;
       default:
         return <Homepage onNavigate={handleNavigate} />;
     }
