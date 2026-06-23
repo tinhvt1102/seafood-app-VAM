@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { User, Building2, Home } from "lucide-react";
 import { authApi } from "../../api/auth";
+import { toast } from "react-hot-toast";
 
 export function LoginPage({ onNavigate, setCart }) {
   const googleBtnRef = useRef(null);
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
 
   const [email, setEmail] = useState("");
@@ -38,15 +40,21 @@ export function LoginPage({ onNavigate, setCart }) {
     e.preventDefault();
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-      alert("Vui lòng nhập đúng định dạng Email (ví dụ: example@gmail.com)!");
+      toast.error("Vui lòng nhập đúng định dạng Email!");
       return;
     }
 
     setLoading(true);
     try {
-      if (isLogin) {
-        const response = await authApi.login(email, password);
-        // Save auth state
+      if (isForgotPassword) {
+        // ================= XỬ LÝ QUÊN MẬT KHẨU =================
+        await authApi.forgotPassword(email.trim());
+        toast.success("Hệ thống đã gửi hướng dẫn khôi phục vào Email của bạn. Vui lòng kiểm tra hộp thư!");
+        setIsForgotPassword(false);
+        setIsLogin(true);
+      } else if (isLogin) {
+        // ================= XỬ LÝ ĐĂNG NHẬP =================
+        const response = await authApi.login(email.trim(), password);
         localStorage.setItem("token", response.token);
         localStorage.setItem(
           "currentUser",
@@ -58,22 +66,27 @@ export function LoginPage({ onNavigate, setCart }) {
           }),
         );
 
-        alert(`Đăng nhập thành công!`);
+        toast.success(`Đăng nhập thành công!`);
         onNavigate("home");
       } else {
         if (password !== confirmPassword) {
-          alert("Mật khẩu xác nhận không khớp!");
+          toast.error("Mật khẩu xác nhận không khớp!");
+          setLoading(false);
           return;
         }
 
         const registrationData = {
-          name: fullName,
-          email,
-          password,
+          name: fullName ? fullName.trim() : "",
+          email: email ? email.trim() : "",
+          password: password,
+          phone: null,
+          address: null
         };
 
+        console.log("Dữ liệu đăng ký gửi đi:", registrationData);
         await authApi.register(registrationData);
-        alert("Đăng ký thành công! Hãy đăng nhập để tiếp tục.");
+        
+        toast.success("Đăng ký tài khoản thành công!"); 
         setIsLogin(true);
         setSelectedRole(null);
         setFullName("");
@@ -83,7 +96,8 @@ export function LoginPage({ onNavigate, setCart }) {
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      alert(error.message || "Đã có lỗi xảy ra. Vui lòng thử lại!");
+      const errMsg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra. Vui lòng thử lại!";
+      toast.error(errMsg); 
     } finally {
       setLoading(false);
     }
@@ -96,7 +110,7 @@ export function LoginPage({ onNavigate, setCart }) {
       if (!idToken) {
         throw new Error("Không nhận được token từ Google!");
       }
-      
+
       const apiResponse = await authApi.googleLogin(idToken);
 
       localStorage.setItem("token", apiResponse.token);
@@ -110,11 +124,11 @@ export function LoginPage({ onNavigate, setCart }) {
         }),
       );
 
-      alert("Đăng nhập qua Google thành công!");
+      toast.success("Đăng nhập qua Google thành công!"); 
       onNavigate("home");
     } catch (error) {
       console.error("Google login error:", error);
-      alert(error.message || "Đăng nhập qua Google thất bại!");
+      toast.error(error.message || "Đăng nhập qua Google thất bại!"); 
     } finally {
       setLoading(false);
     }
@@ -122,7 +136,7 @@ export function LoginPage({ onNavigate, setCart }) {
 
   useEffect(() => {
     let script;
-    
+
     const initializeGoogleSignIn = () => {
       if (window.google && googleBtnRef.current) {
         try {
@@ -133,10 +147,10 @@ export function LoginPage({ onNavigate, setCart }) {
 
           window.google.accounts.id.renderButton(
             googleBtnRef.current,
-            { 
-              theme: "outline", 
-              size: "large", 
-              width: 240, 
+            {
+              theme: "outline",
+              size: "large",
+              width: 240,
               type: "standard",
               shape: "rectangular",
               text: "signin_with",
@@ -178,7 +192,17 @@ export function LoginPage({ onNavigate, setCart }) {
         existingScript.removeEventListener("load", initializeGoogleSignIn);
       }
     };
-  }, [isLogin]);
+  }, [isLogin, isForgotPassword]);
+
+  const getTitle = () => {
+    if (isForgotPassword) return "Quên mật khẩu";
+    return isLogin ? "Đăng nhập" : "Đăng ký";
+  };
+
+  const getSubTitle = () => {
+    if (isForgotPassword) return "Nhập email để nhận hướng dẫn khôi phục";
+    return isLogin ? "Chào mừng bạn trở lại" : "Tạo tài khoản mới";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
@@ -212,14 +236,14 @@ export function LoginPage({ onNavigate, setCart }) {
                 className="mb-2 font-bold text-2xl"
                 style={{ color: "#0A2647" }}
               >
-                {isLogin ? "Đăng nhập" : "Đăng ký"}
+                {getTitle()}
               </h1>
               <p className="text-gray-600">
-                {isLogin ? "Chào mừng bạn trở lại" : "Tạo tài khoản mới"}
+                {getSubTitle()}
               </p>
             </div>
 
-            {!isLogin && !selectedRole ? (
+            {!isLogin && !selectedRole && !isForgotPassword ? (
               <div>
                 <h3
                   className="mb-4 text-center font-medium"
@@ -272,7 +296,7 @@ export function LoginPage({ onNavigate, setCart }) {
             ) : (
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
-                  {!isLogin && (
+                  {!isLogin && !isForgotPassword && (
                     <div>
                       <label className="block text-sm mb-2 font-medium">
                         Họ và tên
@@ -306,23 +330,25 @@ export function LoginPage({ onNavigate, setCart }) {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm mb-2 font-medium">
-                      Mật khẩu
-                    </label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
-                      style={{ borderColor: "#e5e7eb" }}
-                      placeholder="••••••••"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
+                  {!isForgotPassword && (
+                    <div>
+                      <label className="block text-sm mb-2 font-medium">
+                        Mật khẩu
+                      </label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
+                        style={{ borderColor: "#e5e7eb" }}
+                        placeholder="••••••••"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  )}
 
-                  {!isLogin && (
+                  {!isLogin && !isForgotPassword && (
                     <div>
                       <label className="block text-sm mb-2 font-medium">
                         Xác nhận mật khẩu
@@ -340,7 +366,7 @@ export function LoginPage({ onNavigate, setCart }) {
                     </div>
                   )}
 
-                  {isLogin && (
+                  {isLogin && !isForgotPassword && (
                     <div className="flex items-center justify-between text-sm">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -350,13 +376,16 @@ export function LoginPage({ onNavigate, setCart }) {
                         />
                         Ghi nhớ đăng nhập
                       </label>
-                      <a
-                        href="#"
-                        className="font-medium"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsForgotPassword(true);
+                        }}
+                        className="font-medium bg-none border-none cursor-pointer"
                         style={{ color: "#00BCD4" }}
                       >
                         Quên mật khẩu?
-                      </a>
+                      </button>
                     </div>
                   )}
 
@@ -388,14 +417,29 @@ export function LoginPage({ onNavigate, setCart }) {
                         ></path>
                       </svg>
                     )}
-                    {isLogin
-                      ? "Đăng nhập"
-                      : `Đăng ký với vai trò ${roles.find((r) => r.id === selectedRole)?.title}`}
+                    {isForgotPassword
+                      ? "Gửi yêu cầu"
+                      : isLogin
+                        ? "Đăng nhập"
+                        : `Đăng ký với vai trò ${roles.find((r) => r.id === selectedRole)?.title}`}
                   </button>
                 </div>
 
                 <div className="mt-6 text-center text-sm">
-                  {isLogin ? (
+                  {isForgotPassword ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsForgotPassword(false);
+                        setIsLogin(true);
+                      }}
+                      className="font-medium"
+                      style={{ color: "#00BCD4" }}
+                      disabled={loading}
+                    >
+                      ← Quay lại đăng nhập
+                    </button>
+                  ) : isLogin ? (
                     <p>
                       Chưa có tài khoản?{" "}
                       <button
@@ -426,26 +470,19 @@ export function LoginPage({ onNavigate, setCart }) {
                     </button>
                   )}
                 </div>
-
-                <div
-                  className="mt-6 pt-6 border-t"
-                  style={{ borderColor: "#e5e7eb" }}
-                >
-                  <p className="text-center text-sm text-gray-600 mb-4">
-                    Hoặc đăng nhập với
-                  </p>
-                  <div className="flex gap-3 items-center justify-between">
-                    <div ref={googleBtnRef} id="google-signin-button" className="flex-1 flex justify-center h-[40px]"></div>
-                    <button
-                      type="button"
-                      className="flex-1 py-2.5 border rounded-md hover:bg-gray-50 text-sm font-medium transition-colors flex items-center justify-center h-[40px]"
-                      style={{ borderColor: "#e5e7eb" }}
-                      disabled={loading}
-                    >
-                      Facebook
-                    </button>
+                {!isForgotPassword && (
+                  <div
+                    className="mt-6 pt-6 border-t"
+                    style={{ borderColor: "#e5e7eb" }}
+                  >
+                    <p className="text-center text-sm text-gray-600 mb-4">
+                      Hoặc đăng nhập với
+                    </p>
+                    <div className="flex gap-3 items-center justify-between">
+                      <div ref={googleBtnRef} id="google-signin-button" className="flex-1 flex justify-center h-[40px]"></div>
+                    </div>
                   </div>
-                </div>
+                )}
               </form>
             )}
           </div>

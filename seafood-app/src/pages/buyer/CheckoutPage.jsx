@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { CreditCard, Wallet, Banknote } from 'lucide-react';
+import { toast } from 'react-hot-toast'; // Đã thêm import toast
 
 export function CheckoutPage({ onNavigate, cart = [], setCart }) {
   const [paymentMethod, setPaymentMethod] = useState('bank');
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [isDirectCheckout, setIsDirectCheckout] = useState(false);
 
-  // 1. Kiểm tra xem người dùng đang "Mua ngay" hay mua từ "Giỏ hàng"
+  // 1. Kiểm tra xem người dùng đang Mua ngay hay mua từ Giỏ hàng
   useEffect(() => {
     const directItem = JSON.parse(localStorage.getItem('directCheckoutItem'));
     
@@ -14,7 +15,7 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       setCheckoutItems([directItem]); // Nếu có dữ liệu mua ngay, ép vào mảng để hiển thị
       setIsDirectCheckout(true);
     } else if (cart && cart.length > 0) {
-      // Nếu không mua ngay, dùng giỏ hàng do App.jsx truyền xuống thông qua biến `cart`
+      // Nếu không mua ngay, dùng giỏ hàng do App.jsx truyền xuống thông qua biến cart
       setCheckoutItems(cart);
       setIsDirectCheckout(false);
     } else {
@@ -24,7 +25,6 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       setIsDirectCheckout(false);
     }
 
-    // Dọn dẹp bộ nhớ tạm khi người dùng rời khỏi trang Checkout (quay lại trang mua sắm)
     return () => {
       localStorage.removeItem('directCheckoutItem');
     };
@@ -38,14 +38,12 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Khóa an toàn: Nếu không có sản phẩm nào thì chặn lại
     if (!checkoutItems || checkoutItems.length === 0) {
-      alert('Không có sản phẩm nào để thanh toán!');
+      toast.error('Không có sản phẩm nào để thanh toán!');
       onNavigate('retail'); 
       return;
     }
 
-    // Gom dữ liệu đơn hàng
     const orderData = {
       items: checkoutItems,
       total: total,
@@ -59,22 +57,20 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       
       // 3. Phân nhánh xóa dữ liệu sau khi đặt hàng thành công
       if (isDirectCheckout) {
-        // Nếu là Mua Ngay: Chỉ xóa biến tạm directCheckoutItem (Giỏ hàng của họ vẫn giữ nguyên)
         localStorage.removeItem('directCheckoutItem');
       } else {
-        // Nếu là mua từ giỏ hàng: Xóa sạch giỏ hàng trong state và localStorage
         if (typeof setCart === 'function') {
           setCart([]);
         }
         localStorage.removeItem('cart');
       }
 
-      alert('Đặt hàng thành công! Cảm ơn bạn đã tin tưởng chúng tôi.');
+      toast.success('Đặt hàng thành công! Cảm ơn bạn đã tin tưởng chúng tôi.');
       window.scrollTo(0, 0);
       onNavigate('home');
     } catch (error) {
       console.error('Lỗi khi lưu đơn hàng:', error);
-      alert('Đã xảy ra lỗi trong quá trình xử lý đơn hàng. Vui lòng thử lại!');
+      toast.error('Đã xảy ra lỗi trong quá trình xử lý đơn hàng. Vui lòng thử lại!');
     }
   };
 

@@ -16,6 +16,7 @@ import { B2BCartPage } from './pages/buyer/B2BCartPage';
 import { ListingManagementPage } from './pages/seller/ListingManagementPage';
 import { OrderManagementPage } from './pages/seller/OrderManagementPage';
 import { SellerCenterPage } from './pages/seller/SellerCenterPage';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -33,10 +34,10 @@ export default function App() {
     }
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     const cartKey = user ? `cart_${user.id || user.email}` : 'cart_guest';
     const savedCart = localStorage.getItem(cartKey);
-    
+
     if (savedCart) {
       setCartItems(JSON.parse(savedCart));
     } else {
@@ -74,7 +75,8 @@ useEffect(() => {
       ];
     });
 
-    alert(`Đã thêm ${quantity}kg ${product.name} vào giỏ hàng thành công!`);
+    // Thay thế alert thành toast.success tại đây
+    toast.success(`Đã thêm ${quantity}kg ${product.name} vào giỏ hàng!`);
   };
 
   // Hàm Mua ngay thông minh: Chuẩn hóa dữ liệu số trước khi lưu
@@ -142,10 +144,10 @@ useEffect(() => {
         return <Homepage onAddToCart={handleAddToCart} onNavigate={handleNavigate} />;
       case 'retail':
         return (
-          <RetailPage 
-          allProducts={retailProducts}
-          onNavigate={handleNavigate}
-          onAddToCart={handleAddToCart}
+          <RetailPage
+            allProducts={retailProducts}
+            onNavigate={handleNavigate}
+            onAddToCart={handleAddToCart}
 
           />
         );
@@ -201,6 +203,8 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Toaster position="top-right" reverseOrder={false} />
+
       <Navbar
         user={user}
         currentPage={currentPage}

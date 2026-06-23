@@ -1,4 +1,5 @@
 import { Phone, Mail, MapPin, Send } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export function ContactPage() {
   return (
@@ -60,18 +61,18 @@ export function ContactPage() {
           {/* Contact Form */}
           <div className="bg-white rounded-lg shadow-sm p-8">
             <h2 className="mb-6" style={{ color: '#0A2647' }}>Gửi tin nhắn</h2>
-            <form 
+            <form
               onSubmit={(e) => {
                 e.preventDefault();
-                alert('Gửi tin nhắn thành công! Chúng tôi sẽ phản hồi sớm nhất.');
+                toast.success('Gửi tin nhắn thành công! Chúng tôi sẽ phản hồi sớm nhất.');
               }}
               className="space-y-4"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm mb-2">Họ và tên *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="w-full p-3 border rounded-md"
                     style={{ borderColor: '#e5e7eb' }}
                     placeholder="Nguyễn Văn A"
@@ -80,8 +81,8 @@ export function ContactPage() {
                 </div>
                 <div>
                   <label className="block text-sm mb-2">Số điện thoại *</label>
-                  <input 
-                    type="tel" 
+                  <input
+                    type="tel"
                     className="w-full p-3 border rounded-md"
                     style={{ borderColor: '#e5e7eb' }}
                     placeholder="0901234567"
@@ -92,8 +93,8 @@ export function ContactPage() {
 
               <div>
                 <label className="block text-sm mb-2">Email *</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   className="w-full p-3 border rounded-md"
                   style={{ borderColor: '#e5e7eb' }}
                   placeholder="email@example.com"
@@ -103,7 +104,7 @@ export function ContactPage() {
 
               <div>
                 <label className="block text-sm mb-2">Chủ đề *</label>
-                <select 
+                <select
                   className="w-full p-3 border rounded-md"
                   style={{ borderColor: '#e5e7eb' }}
                   required
@@ -119,7 +120,7 @@ export function ContactPage() {
 
               <div>
                 <label className="block text-sm mb-2">Nội dung *</label>
-                <textarea 
+                <textarea
                   rows={5}
                   className="w-full p-3 border rounded-md"
                   style={{ borderColor: '#e5e7eb' }}
@@ -128,7 +129,7 @@ export function ContactPage() {
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 className="w-full py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 style={{ backgroundColor: '#00BCD4' }}
@@ -167,8 +168,8 @@ export function ContactPage() {
 
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="aspect-video bg-gray-200">
-                <img 
-                  src="https://images.unsplash.com/photo-1611794501034-13369f948303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHdhdmVzJTIwYmx1ZXxlbnwxfHx8fDE3NzI2MzU4MTB8MA&ixlib=rb-4.1.0&q=80&w=1080" 
+                <img
+                  src="https://images.unsplash.com/photo-1611794501034-13369f948303?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHdhdmVzJTIwYmx1ZXxlbnwxfHx8fDE3NzI2MzU4MTB8MA&ixlib=rb-4.1.0&q=80&w=1080"
                   alt="Map placeholder"
                   className="w-full h-full object-cover"
                 />

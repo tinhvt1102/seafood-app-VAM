@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { toast } from 'react-hot-toast'; // Đã thêm import toast
 
 export function CartPage({ cartItems = [], setCartItems, onNavigate }) {  
   
@@ -13,9 +14,13 @@ export function CartPage({ cartItems = [], setCartItems, onNavigate }) {
     );
   };
 
-  // 2. Xóa sản phẩm khỏi giỏ hàng
+  // 2. Xóa sản phẩm khỏi giỏ hàng kèm thông báo toast
   const removeItem = (id) => {
+    const targetItem = cartItems.find(item => item.id === id);
+    const itemName = targetItem ? targetItem.name : 'sản phẩm';
+
     setCartItems(items => items.filter(item => item.id !== id));
+    toast.error(`Đã xóa ${itemName} khỏi giỏ hàng!`);
   };
 
   const { subtotal, shipping, total } = useMemo(() => {
@@ -86,7 +91,7 @@ export function CartPage({ cartItems = [], setCartItems, onNavigate }) {
                           <div className="flex items-center border rounded-md bg-gray-50" style={{ borderColor: '#e5e7eb' }}>
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              disabled={item.quantity <= 1} // Disable nút giảm nếu số lượng = 1
+                              disabled={item.quantity <= 1}
                               className="p-2 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                               <Minus className="w-4 h-4" />
@@ -154,7 +159,7 @@ export function CartPage({ cartItems = [], setCartItems, onNavigate }) {
                   className="w-full py-3 border rounded-md font-medium hover:bg-gray-50 transition-colors"
                   style={{ borderColor: '#0A2647', color: '#0A2647' }}
                 >
-                  Tiếp tục mua sắm
+                  Tiến hành mua sắm tiếp
                 </button>
               </div>
             </div>

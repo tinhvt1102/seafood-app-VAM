@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Edit, Send, Trash2, Eye, AlertCircle, CheckCircle, Clock, XCircle, Package, Filter } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export function ListingManagementPage({ onNavigate }) {
   const [listings, setListings] = useState([
@@ -44,18 +45,48 @@ export function ListingManagementPage({ onNavigate }) {
     setListings(listings.map(listing =>
       listing.id === id ? { ...listing, status: 'pending' } : listing
     ));
-    alert('Đã gửi lại bài đăng để xét duyệt!');
+    toast.success('Đã gửi lại bài đăng để xét duyệt thành công!');
   };
 
   const handleDelete = (id) => {
-    if (confirm('Bạn có chắc chắn muốn xóa bài đăng này?')) {
-      setListings(listings.filter(listing => listing.id !== id));
-      alert('Đã xóa bài đăng!');
-    }
+    const targetListing = listings.find(l => l.id === id);
+    const listingName = targetListing ? targetListing.name : 'bài đăng';
+
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-gray-900">
+          Bạn có chắc chắn muốn xóa <strong>{listingName}</strong>?
+        </span>
+        <div className="flex justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              setListings(prev => prev.filter(listing => listing.id !== id));
+              toast.error('Đã xóa bài đăng khỏi hệ thống!');
+            }}
+            className="px-2.5 py-1 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded"
+          >
+            Xác nhận xóa
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+    });
   };
 
   const handleViewDetails = (id) => {
-    alert(`Xem chi tiết bài đăng ${id}`);
+    const targetListing = listings.find(l => l.id === id);
+    toast.loading(`Đang tải chi tiết: ${targetListing?.name || id}...`, {
+      duration: 1500
+    });
   };
 
   const filteredListings = listings.filter(listing => {
@@ -177,7 +208,7 @@ export function ListingManagementPage({ onNavigate }) {
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                       Không có bài đăng nào
                     </td>
-                  </tr>
+                  </tr> /* Đã sửa lỗi thẻ đóng ở đây */
                 ) : (
                   filteredListings.map((listing) => {
                     const statusConfig = getStatusColor(listing.status);

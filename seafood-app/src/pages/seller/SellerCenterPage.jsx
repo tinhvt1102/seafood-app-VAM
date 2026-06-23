@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import { Upload, Save, Send, Package, Fish, AlertCircle, BarChart3, X } from 'lucide-react';
+// 1. Thêm import toast và Toaster
+import toast, { Toaster } from 'react-hot-toast';
 
 export function SellerCenterPage({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -47,24 +49,28 @@ export function SellerCenterPage({ onNavigate }) {
 
   const handleSaveDraft = (type) => {
     console.log(`Dữ liệu nháp ${type}:`, type === 'supply' ? supplyForm : productForm);
-    alert(`Đã lưu nháp ${type === 'supply' ? 'sản lượng' : 'sản phẩm'} thành công!`);
+    // 2. Chuyển thành toast.success
+    toast.success(`Đã lưu nháp ${type === 'supply' ? 'sản lượng' : 'sản phẩm'} thành công!`);
   };
 
   const handleSubmitForApproval = (type) => {
     const currentForm = type === 'supply' ? supplyForm : productForm;
     
-    // Kiểm tra nhanh validation cơ bản
+    // Kiểm tra nhanh validation cơ bản - Chuyển thành toast.error
     if (type === 'supply' && (!supplyForm.seafoodType || !supplyForm.size || !supplyForm.quantity || !supplyForm.harvestDate || !supplyForm.proposedPrice || !supplyForm.location || !supplyForm.description)) {
-      alert('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
+      toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
       return;
     }
     if (type === 'product' && (!productForm.productName || !productForm.category || !productForm.price || !productForm.stock || !productForm.description)) {
-      alert('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
+      toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
       return;
     }
 
     console.log(`Dữ liệu gửi duyệt ${type}:`, currentForm);
-    alert(`Đã gửi ${type === 'supply' ? 'sản lượng' : 'sản phẩm'} để xét duyệt! Admin sẽ xem xét và phê duyệt trong thời gian sớm nhất.`);
+    // 3. Chuyển thành toast.success hoặc thông báo dạng tùy biến
+    toast.success(`Đã gửi xét duyệt thành công! Admin sẽ xem xét trong thời gian sớm nhất.`, {
+      duration: 4000
+    });
     onNavigate('listing-management');
   };
 
@@ -84,14 +90,22 @@ export function SellerCenterPage({ onNavigate }) {
       const newImages = filesArray.map(file => URL.createObjectURL(file));
 
       if (type === 'supply') {
+        if (supplyForm.images.length >= 5) {
+          toast.error('Tối đa chỉ được tải lên 5 ảnh sản lượng!');
+          return;
+        }
         setSupplyForm(prev => ({
           ...prev,
-          images: [...prev.images, ...newImages].slice(0, 5) // Giới hạn tối đa 5 ảnh
+          images: [...prev.images, ...newImages].slice(0, 5)
         }));
       } else {
+        if (productForm.images.length >= 8) {
+          toast.error('Tối đa chỉ được tải lên 8 ảnh sản phẩm!');
+          return;
+        }
         setProductForm(prev => ({
           ...prev,
-          images: [...prev.images, ...newImages].slice(0, 8) // Giới hạn tối đa 8 ảnh
+          images: [...prev.images, ...newImages].slice(0, 8)
         }));
       }
     }
@@ -109,10 +123,14 @@ export function SellerCenterPage({ onNavigate }) {
         images: prev.images.filter((_, idx) => idx !== indexToRemove)
       }));
     }
+    toast.success('Đã xóa ảnh');
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* 4. Đặt thẻ Toaster ở đây để hiển thị thông báo lơ lửng trên màn hình */}
+      <Toaster position="top-right" reverseOrder={false} />
+
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -167,7 +185,6 @@ export function SellerCenterPage({ onNavigate }) {
         {/* Tab Content */}
         <div className="bg-white rounded-b-lg shadow-sm p-8">
           {activeTab === 'overview' ? (
-            // Overview Dashboard
             <div className="space-y-8">
               <h2 className="text-xl font-bold" style={{ color: '#0A2647' }}>Seller Overview</h2>
 
@@ -399,7 +416,6 @@ export function SellerCenterPage({ onNavigate }) {
                     <p className="text-sm text-gray-400">PNG, JPG tối đa 10MB (Tối đa 5 ảnh)</p>
                   </div>
 
-                  {/* Preview Images Block */}
                   {supplyForm.images.length > 0 && (
                     <div className="grid grid-cols-5 gap-4">
                       {supplyForm.images.map((img, idx) => (
@@ -569,7 +585,6 @@ export function SellerCenterPage({ onNavigate }) {
                     <p className="text-sm text-gray-400">PNG, JPG tối đa 10MB (Tối đa 8 ảnh)</p>
                   </div>
 
-                  {/* Preview Images Block */}
                   {productForm.images.length > 0 && (
                     <div className="grid grid-cols-4 gap-4">
                       {productForm.images.map((img, idx) => (

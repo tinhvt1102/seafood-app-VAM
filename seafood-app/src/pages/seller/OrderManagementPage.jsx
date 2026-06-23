@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle, XCircle, Package, Truck, DollarSign, Eye, Clock, AlertCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export function OrderManagementPage({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('new');
@@ -23,21 +24,63 @@ export function OrderManagementPage({ onNavigate }) {
     setOrders(orders.map(order =>
       order.id === id ? { ...order, status: 'processing' } : order
     ));
-    alert('Đã chấp nhận đơn hàng!');
+    toast.success('Đã chấp nhận đơn hàng và chuyển sang xử lý!');
   };
 
   const handleRejectOrder = (id) => {
-    if (confirm('Bạn có chắc chắn muốn từ chối đơn hàng này?')) {
-      setOrders(orders.filter(order => order.id !== id));
-      alert('Đã từ chối đơn hàng!');
-    }
+    const targetOrder = orders.find(o => o.id === id);
+    const orderCode = targetOrder ? targetOrder.orderCode : 'đơn hàng';
+
+    // Sử dụng toast custom thay cho confirm() của hệ thống
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-gray-900">
+          Bạn có chắc chắn muốn từ chối đơn hàng <strong>{orderCode}</strong>?
+        </span>
+        <div className="flex justify-end gap-2 mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              setOrders(orders.filter(order => order.id !== id));
+              toast.error(`Đã từ chối đơn hàng ${orderCode}!`);
+            }}
+            className="px-2.5 py-1 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded"
+          >
+            Từ chối đơn
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+    });
   };
 
   const handleUpdateStatus = (id, newStatus) => {
     setOrders(orders.map(order =>
       order.id === id ? { ...order, status: newStatus } : order
     ));
-    alert('Đã cập nhật trạng thái đơn hàng!');
+    
+    // Đổi câu thông báo linh hoạt theo trạng thái mới
+    if (newStatus === 'shipping') {
+      toast.success('Đơn hàng đã bắt đầu được vận chuyển!');
+    } else if (newStatus === 'completed') {
+      toast.success('Chúc mừng! Đơn hàng đã hoàn thành xuất sắc.');
+    } else {
+      toast.success('Đã cập nhật trạng thái đơn hàng!');
+    }
+  };
+
+  const handleViewDetails = (orderCode) => {
+    toast.loading(`Đang tải dữ liệu đơn hàng ${orderCode}...`, {
+      duration: 1000
+    });
   };
 
   const getOrdersByStatus = (status) => orders.filter(order => order.status === status);
@@ -128,7 +171,11 @@ export function OrderManagementPage({ onNavigate }) {
                             Hoàn thành
                           </button>
                         )}
-                        <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Xem chi tiết">
+                        <button 
+                          onClick={() => handleViewDetails(order.orderCode)}
+                          className="p-2 hover:bg-gray-100 rounded-md transition-colors" 
+                          title="Xem chi tiết"
+                        >
                           <Eye className="w-5 h-5 text-gray-600" />
                         </button>
                       </div>
