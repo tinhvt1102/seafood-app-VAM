@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Menu, X, ShoppingCart, LogOut, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
+import { authApi } from "../api/auth";
 
 // NHẬN prop user trực tiếp từ App.jsx truyền xuống ở đây
 export function Navbar({ currentPage, onNavigate, cartCount, user }) {
@@ -71,8 +72,14 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
   }, []);
 
   // Đăng xuất gọi hàm chuyển hướng của App để App xóa sạch State user
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Failed to call logout API:", error);
+    }
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("token");
     if (onNavigate) {
       onNavigate("home");
     }

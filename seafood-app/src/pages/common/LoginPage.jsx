@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { User, Building2, Home } from "lucide-react";
 import { authApi } from "../../api/auth";
 import { toast } from "react-hot-toast";
 
@@ -7,34 +6,12 @@ export function LoginPage({ onNavigate, setCart }) {
   const googleBtnRef = useRef(null);
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const roles = [
-    {
-      id: "buyer",
-      icon: User,
-      title: "Người mua",
-      description: "Mua hải sản tươi sống chất lượng cao",
-    },
-    {
-      id: "business",
-      icon: Building2,
-      title: "Doanh nghiệp",
-      description: "Tìm nguồn hải sản số lượng lớn",
-    },
-    {
-      id: "farmer",
-      icon: Home,
-      title: "Người nuôi",
-      description: "Đăng bán sản lượng hải sản",
-    },
-  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,7 +26,9 @@ export function LoginPage({ onNavigate, setCart }) {
       if (isForgotPassword) {
         // ================= XỬ LÝ QUÊN MẬT KHẨU =================
         await authApi.forgotPassword(email.trim());
-        toast.success("Hệ thống đã gửi hướng dẫn khôi phục vào Email của bạn. Vui lòng kiểm tra hộp thư!");
+        toast.success(
+          "Hệ thống đã gửi hướng dẫn khôi phục vào Email của bạn. Vui lòng kiểm tra hộp thư!",
+        );
         setIsForgotPassword(false);
         setIsLogin(true);
       } else if (isLogin) {
@@ -59,9 +38,11 @@ export function LoginPage({ onNavigate, setCart }) {
         localStorage.setItem(
           "currentUser",
           JSON.stringify({
+            id: response.user?.id || response.id,
             email: response.user?.email || response.email || email,
             name: response.user?.name || response.name || "User",
             role: response.user?.role || response.role || "buyer",
+            status: response.user?.status || response.status || "active",
             token: response.token,
           }),
         );
@@ -80,15 +61,14 @@ export function LoginPage({ onNavigate, setCart }) {
           email: email ? email.trim() : "",
           password: password,
           phone: null,
-          address: null
+          address: null,
         };
 
         console.log("Dữ liệu đăng ký gửi đi:", registrationData);
         await authApi.register(registrationData);
-        
-        toast.success("Đăng ký tài khoản thành công!"); 
+
+        toast.success("Đăng ký tài khoản thành công!");
         setIsLogin(true);
-        setSelectedRole(null);
         setFullName("");
         setEmail("");
         setPassword("");
@@ -96,8 +76,11 @@ export function LoginPage({ onNavigate, setCart }) {
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      const errMsg = error.response?.data?.message || error.message || "Đã có lỗi xảy ra. Vui lòng thử lại!";
-      toast.error(errMsg); 
+      const errMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Đã có lỗi xảy ra. Vui lòng thử lại!";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -117,18 +100,20 @@ export function LoginPage({ onNavigate, setCart }) {
       localStorage.setItem(
         "currentUser",
         JSON.stringify({
+          id: apiResponse.user?.id || apiResponse.id,
           email: apiResponse.user?.email || apiResponse.email,
           name: apiResponse.user?.name || apiResponse.name || "Google User",
           role: apiResponse.user?.role || apiResponse.role || "buyer",
+          status: apiResponse.user?.status || apiResponse.status || "active",
           token: apiResponse.token,
         }),
       );
 
-      toast.success("Đăng nhập qua Google thành công!"); 
+      toast.success("Đăng nhập qua Google thành công!");
       onNavigate("home");
     } catch (error) {
       console.error("Google login error:", error);
-      toast.error(error.message || "Đăng nhập qua Google thất bại!"); 
+      toast.error(error.message || "Đăng nhập qua Google thất bại!");
     } finally {
       setLoading(false);
     }
@@ -141,29 +126,29 @@ export function LoginPage({ onNavigate, setCart }) {
       if (window.google && googleBtnRef.current) {
         try {
           window.google.accounts.id.initialize({
-            client_id: "273398524893-lu4liu2k1ei4ppn14beasfuq3afkh3bp.apps.googleusercontent.com",
+            client_id:
+              "273398524893-lu4liu2k1ei4ppn14beasfuq3afkh3bp.apps.googleusercontent.com",
             callback: handleCredentialResponse,
           });
 
-          window.google.accounts.id.renderButton(
-            googleBtnRef.current,
-            {
-              theme: "outline",
-              size: "large",
-              width: 240,
-              type: "standard",
-              shape: "rectangular",
-              text: "signin_with",
-              logo_alignment: "left"
-            }
-          );
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: "outline",
+            size: "large",
+            width: 240,
+            type: "standard",
+            shape: "rectangular",
+            text: "signin_with",
+            logo_alignment: "left",
+          });
         } catch (error) {
           console.error("Failed to initialize Google Sign-In:", error);
         }
       }
     };
 
-    const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    const existingScript = document.querySelector(
+      'script[src="https://accounts.google.com/gsi/client"]',
+    );
     if (!existingScript) {
       script = document.createElement("script");
       script.src = "https://accounts.google.com/gsi/client";
@@ -238,253 +223,201 @@ export function LoginPage({ onNavigate, setCart }) {
               >
                 {getTitle()}
               </h1>
-              <p className="text-gray-600">
-                {getSubTitle()}
-              </p>
+              <p className="text-gray-600">{getSubTitle()}</p>
             </div>
 
-            {!isLogin && !selectedRole && !isForgotPassword ? (
-              <div>
-                <h3
-                  className="mb-4 text-center font-medium"
-                  style={{ color: "#0A2647" }}
-                >
-                  Chọn loại tài khoản
-                </h3>
-                <div className="grid grid-cols-1 gap-3">
-                  {roles.map((role) => {
-                    const Icon = role.icon;
-                    return (
-                      <button
-                        key={role.id}
-                        type="button"
-                        onClick={() => setSelectedRole(role.id)}
-                        className="p-4 border rounded-lg hover:border-[#00BCD4] hover:bg-blue-50 transition-colors text-left"
-                        style={{ borderColor: "#e5e7eb" }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className="p-2 rounded-lg"
-                            style={{ backgroundColor: "#0A2647" }}
-                          >
-                            <Icon className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h4
-                              className="mb-1 font-semibold"
-                              style={{ color: "#0A2647" }}
-                            >
-                              {role.title}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {role.description}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={() => setIsLogin(true)}
-                  className="w-full mt-6 text-center text-sm font-medium"
-                  style={{ color: "#00BCD4" }}
-                >
-                  Đã có tài khoản? Đăng nhập ngay
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                  {!isLogin && !isForgotPassword && (
-                    <div>
-                      <label className="block text-sm mb-2 font-medium">
-                        Họ và tên
-                      </label>
-                      <input
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
-                        style={{ borderColor: "#e5e7eb" }}
-                        placeholder="Nguyễn Văn A"
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                {!isLogin && !isForgotPassword && (
                   <div>
                     <label className="block text-sm mb-2 font-medium">
-                      Email
+                      Họ và tên
                     </label>
                     <input
                       type="text"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
                       style={{ borderColor: "#e5e7eb" }}
-                      placeholder="example@gmail.com"
+                      placeholder="Nguyễn Văn A"
                       required
                       disabled={loading}
                     />
                   </div>
+                )}
 
-                  {!isForgotPassword && (
-                    <div>
-                      <label className="block text-sm mb-2 font-medium">
-                        Mật khẩu
-                      </label>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
-                        style={{ borderColor: "#e5e7eb" }}
-                        placeholder="••••••••"
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-
-                  {!isLogin && !isForgotPassword && (
-                    <div>
-                      <label className="block text-sm mb-2 font-medium">
-                        Xác nhận mật khẩu
-                      </label>
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
-                        style={{ borderColor: "#e5e7eb" }}
-                        placeholder="••••••••"
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-                  )}
-
-                  {isLogin && !isForgotPassword && (
-                    <div className="flex items-center justify-between text-sm">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="rounded text-cyan-500"
-                          disabled={loading}
-                        />
-                        Ghi nhớ đăng nhập
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsForgotPassword(true);
-                        }}
-                        className="font-medium bg-none border-none cursor-pointer"
-                        style={{ color: "#00BCD4" }}
-                      >
-                        Quên mật khẩu?
-                      </button>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="w-full py-3 rounded-md text-white font-bold hover:opacity-90 transition-opacity shadow-md flex justify-center items-center gap-2"
-                    style={{ backgroundColor: "#00BCD4" }}
-                    disabled={loading}
-                  >
-                    {loading && (
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                    )}
-                    {isForgotPassword
-                      ? "Gửi yêu cầu"
-                      : isLogin
-                        ? "Đăng nhập"
-                        : `Đăng ký với vai trò ${roles.find((r) => r.id === selectedRole)?.title}`}
-                  </button>
-                </div>
-
-                <div className="mt-6 text-center text-sm">
-                  {isForgotPassword ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsForgotPassword(false);
-                        setIsLogin(true);
-                      }}
-                      className="font-medium"
-                      style={{ color: "#00BCD4" }}
-                      disabled={loading}
-                    >
-                      ← Quay lại đăng nhập
-                    </button>
-                  ) : isLogin ? (
-                    <p>
-                      Chưa có tài khoản?{" "}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsLogin(false);
-                          setSelectedRole(null);
-                        }}
-                        className="font-bold"
-                        style={{ color: "#00BCD4" }}
-                        disabled={loading}
-                      >
-                        Đăng ký ngay
-                      </button>
-                    </p>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsLogin(true);
-                        setSelectedRole(null);
-                      }}
-                      className="font-medium"
-                      style={{ color: "#00BCD4" }}
-                      disabled={loading}
-                    >
-                      ← Quay lại đăng nhập
-                    </button>
-                  )}
-                </div>
-                {!isForgotPassword && (
-                  <div
-                    className="mt-6 pt-6 border-t"
+                <div>
+                  <label className="block text-sm mb-2 font-medium">
+                    Email
+                  </label>
+                  <input
+                    type="text"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
                     style={{ borderColor: "#e5e7eb" }}
-                  >
-                    <p className="text-center text-sm text-gray-600 mb-4">
-                      Hoặc đăng nhập với
-                    </p>
-                    <div className="flex gap-3 items-center justify-between">
-                      <div ref={googleBtnRef} id="google-signin-button" className="flex-1 flex justify-center h-[40px]"></div>
-                    </div>
+                    placeholder="example@gmail.com"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                {!isForgotPassword && (
+                  <div>
+                    <label className="block text-sm mb-2 font-medium">
+                      Mật khẩu
+                    </label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
+                      style={{ borderColor: "#e5e7eb" }}
+                      placeholder="••••••••"
+                      required
+                      disabled={loading}
+                    />
                   </div>
                 )}
-              </form>
-            )}
+
+                {!isLogin && !isForgotPassword && (
+                  <div>
+                    <label className="block text-sm mb-2 font-medium">
+                      Xác nhận mật khẩu
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full p-3 border rounded-md focus:ring-2 focus:ring-cyan-500 outline-none"
+                      style={{ borderColor: "#e5e7eb" }}
+                      placeholder="••••••••"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                )}
+
+                {isLogin && !isForgotPassword && (
+                  <div className="flex items-center justify-between text-sm">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="rounded text-cyan-500"
+                        disabled={loading}
+                      />
+                      Ghi nhớ đăng nhập
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsForgotPassword(true);
+                      }}
+                      className="font-medium bg-none border-none cursor-pointer"
+                      style={{ color: "#00BCD4" }}
+                    >
+                      Quên mật khẩu?
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-md text-white font-bold hover:opacity-90 transition-opacity shadow-md flex justify-center items-center gap-2"
+                  style={{ backgroundColor: "#00BCD4" }}
+                  disabled={loading}
+                >
+                  {loading && (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  )}
+                  {isForgotPassword
+                    ? "Gửi yêu cầu"
+                    : isLogin
+                      ? "Đăng nhập"
+                      : "Đăng ký"}
+                </button>
+              </div>
+
+              <div className="mt-6 text-center text-sm">
+                {isForgotPassword ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsForgotPassword(false);
+                      setIsLogin(true);
+                    }}
+                    className="font-medium"
+                    style={{ color: "#00BCD4" }}
+                    disabled={loading}
+                  >
+                    ← Quay lại đăng nhập
+                  </button>
+                ) : isLogin ? (
+                  <p>
+                    Chưa có tài khoản?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLogin(false);
+                      }}
+                      className="font-bold"
+                      style={{ color: "#00BCD4" }}
+                      disabled={loading}
+                    >
+                      Đăng ký ngay
+                    </button>
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLogin(true);
+                    }}
+                    className="font-medium"
+                    style={{ color: "#00BCD4" }}
+                    disabled={loading}
+                  >
+                    ← Quay lại đăng nhập
+                  </button>
+                )}
+              </div>
+              {!isForgotPassword && (
+                <div
+                  className="mt-6 pt-6 border-t"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <p className="text-center text-sm text-gray-600 mb-4">
+                    Hoặc đăng nhập với
+                  </p>
+                  <div className="flex gap-3 items-center justify-between">
+                    <div
+                      ref={googleBtnRef}
+                      id="google-signin-button"
+                      className="flex-1 flex justify-center h-[40px]"
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </form>
           </div>
         </div>
       </div>

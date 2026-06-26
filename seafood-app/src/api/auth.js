@@ -49,5 +49,26 @@ export const authApi = {
    */
   logout: async () => {
     return await apiClient.post(ENDPOINTS.AUTH.LOGOUT);
+  },
+
+  /**
+   * Update pending user to active customer
+   */
+  updateCustomerStatus: async (userId) => {
+    return await apiClient.put(`/Users/customer-status/${userId}`);
+  },
+
+  /**
+   * Create seller profile (Form Data with PDF certificate)
+   */
+  createSellerProfile: async (formData) => {
+    return await apiClient.post('/Profiles/seller', formData);
+  },
+
+  /**
+   * Create business profile (Form Data with PDF business license)
+   */
+  createBusinessProfile: async (formData) => {
+    return await apiClient.post('/Profiles/business', formData);
   }
 };

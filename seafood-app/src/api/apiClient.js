@@ -28,9 +28,12 @@ async function request(endpoint, options = {}) {
 
   // Default headers
   const headers = {
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Auto-inject Token from localStorage if exists
   const token = localStorage.getItem('token') || localStorage.getItem('currentUser') 

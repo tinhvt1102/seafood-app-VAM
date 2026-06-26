@@ -11,6 +11,7 @@ import { CartPage } from './pages/buyer/CartPage';
 import { CheckoutPage } from './pages/buyer/CheckoutPage';
 import { DashboardPage } from './pages/seller/DashboardPage';
 import { LoginPage } from './pages/common/LoginPage';
+import { RoleSelectionOverlay } from './components/RoleSelectionOverlay';
 import { ContactPage } from './pages/common/ContactPage';
 import { B2BCartPage } from './pages/buyer/B2BCartPage';
 import { ListingManagementPage } from './pages/seller/ListingManagementPage';
@@ -106,6 +107,19 @@ export default function App() {
     setUser(savedUser);
     setCurrentPage('home');
     window.scrollTo(0, 0);
+  };
+
+  // Cập nhật trạng thái onboarding vai trò
+  const handleStatusUpdated = (newStatus, newRole) => {
+    const updatedUser = {
+      ...user,
+      status: newStatus
+    };
+    if (newRole) {
+      updatedUser.role = newRole;
+    }
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    setUser(updatedUser);
   };
 
   // 5. Điều hướng trang
@@ -207,6 +221,10 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <Toaster position="top-right" reverseOrder={false} />
+
+      {user && user.status === 'pending' && (
+        <RoleSelectionOverlay user={user} onStatusUpdated={handleStatusUpdated} />
+      )}
 
       <Navbar
         user={user}
