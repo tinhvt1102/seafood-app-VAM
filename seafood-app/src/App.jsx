@@ -12,6 +12,7 @@ import { CheckoutPage } from './pages/buyer/CheckoutPage';
 import { DashboardPage } from './pages/seller/DashboardPage';
 import { LoginPage } from './pages/common/LoginPage';
 import { RoleSelectionOverlay } from './components/RoleSelectionOverlay';
+import { ProfilePage } from './pages/common/ProfilePage';
 import { ContactPage } from './pages/common/ContactPage';
 import { B2BCartPage } from './pages/buyer/B2BCartPage';
 import { ListingManagementPage } from './pages/seller/ListingManagementPage';
@@ -131,6 +132,7 @@ export default function App() {
 
   // 6. Hệ thống phân quyền truy cập trang (Role-based Authentication)
   const canAccess = (page) => {
+    if (user && page === 'profile') return true;
     if (!user) {
       return ['home', 'login', 'contact', 'retail', 'product-detail', 'cart', 'checkout'].includes(page);
     }
@@ -198,6 +200,8 @@ export default function App() {
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
       case 'login':
         return <LoginPage onNavigate={handleLoginSuccess} setCartItems={setCartItems} />;
+      case 'profile':
+        return <ProfilePage user={user} onNavigate={handleNavigate} />;
       case 'contact':
         return <ContactPage />;
       case 'b2b-cart':

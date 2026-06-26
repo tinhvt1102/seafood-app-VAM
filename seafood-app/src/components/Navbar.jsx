@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, ShoppingCart, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, ShoppingCart, Power, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
 import { authApi } from "../api/auth";
 
@@ -88,181 +88,194 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <button
-            onClick={() => onNavigate?.("home")}
-            className="flex-shrink-0"
-          >
-            <Logo />
-          </button>
+    <nav className="sticky top-4 z-[999] w-11/12 md:w-2/3 lg:w-[60%] xl:w-[50%] mx-auto">
+      <div className="bg-white border border-gray-100 rounded-full shadow-lg px-5 py-1 flex items-center justify-between transition-all duration-300">
+        {/* Logo */}
+        <button
+          onClick={() => onNavigate?.("home")}
+          className="flex-shrink-0 flex items-center cursor-pointer hover:opacity-90 transition-opacity"
+        >
+          <Logo imgHeight="h-7" />
+        </button>
 
-          {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-2 xl:space-x-4">
-            {visibleMenu.map((item) => (
+        {/* Desktop Menu */}
+        <div className="hidden lg:flex items-center gap-0.5">
+          {visibleMenu.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onNavigate?.(item.id)}
+              className="px-3 py-1 rounded-full transition-all whitespace-nowrap text-xs font-bold cursor-pointer"
+              style={{
+                backgroundColor:
+                  currentPage === item.id ? "#0A2647" : "transparent",
+                color: currentPage === item.id ? "white" : "#0A2647",
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+
+          {/* Dropdown "DANH MỤC" */}
+          {dropdownMenu.length > 0 && (
+            <div className="relative pr-1" ref={dropdownRef}>
               <button
-                key={item.id}
-                onClick={() => onNavigate?.(item.id)}
-                className="px-3 py-2 rounded-md transition-colors whitespace-nowrap text-sm font-medium"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="px-3 py-1 rounded-full transition-all whitespace-nowrap text-xs font-bold flex items-center gap-1 hover:bg-gray-100 cursor-pointer"
                 style={{
                   backgroundColor:
-                    currentPage === item.id ? "#0A2647" : "transparent",
-                  color: currentPage === item.id ? "white" : "#0A2647",
+                    isCurrentPageInDropdown || isDropdownOpen
+                      ? "#0A2647"
+                      : "transparent",
+                  color:
+                    isCurrentPageInDropdown || isDropdownOpen
+                      ? "white"
+                      : "#0A2647",
                 }}
               >
-                {item.label}
+                <span>Thêm</span>
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
-            ))}
 
-            {/* Dropdown "DANH MỤC" */}
-            {dropdownMenu.length > 0 && (
-              <div className="relative ml-auto pr-2" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="px-3 py-2 rounded-md transition-all whitespace-nowrap text-sm font-medium flex items-center gap-2 hover:bg-gray-100"
-                  style={{
-                    backgroundColor:
-                      isCurrentPageInDropdown || isDropdownOpen
-                        ? "#0A2647"
-                        : "transparent",
-                    color:
-                      isCurrentPageInDropdown || isDropdownOpen
-                        ? "white"
-                        : "#0A2647",
-                  }}
-                >
-                  <Menu className="w-4 h-4" />
-                  {/* <span className="font-semibold">DANH MỤC</span> */}
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-lg shadow-xl py-2 z-50">
-                    {dropdownMenu.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          onNavigate?.(item.id);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="block w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50"
-                        style={{
-                          color:
-                            currentPage === item.id ? "#00BCD4" : "#0A2647",
-                          fontWeight: currentPage === item.id ? "600" : "400",
-                          backgroundColor:
-                            currentPage === item.id ? "#F0F9FF" : "transparent",
-                        }}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Right Side Icons */}
-          <div className="hidden lg:flex items-center gap-4">
-            {/* GIỎ HÀNG */}
-            <button
-              onClick={() => onNavigate?.("cart")}
-              className="p-2 hover:bg-gray-100 rounded-full relative"
-            >
-              <ShoppingCart className="w-6 h-6" style={{ color: "#0A2647" }} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-
-            {!user ? (
-              <button
-                onClick={() => onNavigate?.("login")}
-                className="px-4 py-2 rounded-md text-white hover:opacity-90 font-medium text-sm"
-                style={{ backgroundColor: "#00BCD4" }}
-              >
-                Đăng nhập / Đăng ký
-              </button>
-            ) : (
-              <div className="flex items-center gap-3 pl-4 border-l">
-                <div className="text-right">
-                  <p className="text-[10px] text-gray-500 font-bold tracking-wider leading-none">
-                    {user.role?.toUpperCase()}
-                  </p>
-                  <p className="text-sm font-bold text-[#0A2647]">
-                    {user.name}
-                  </p>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl py-1.5 z-50">
+                  {dropdownMenu.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        onNavigate?.(item.id);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-xs transition-colors hover:bg-gray-50 font-semibold cursor-pointer"
+                      style={{
+                        color: currentPage === item.id ? "#00BCD4" : "#0A2647",
+                        backgroundColor:
+                          currentPage === item.id ? "#F0F9FF" : "transparent",
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 hover:bg-red-50 rounded-full text-red-500 transition-colors"
-                  title="Đăng xuất"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+        </div>
 
-          {/* Mobile Menu Button */}
+        {/* Right Side Icons */}
+        <div className="hidden lg:flex items-center gap-2">
+          {/* GIỎ HÀNG */}
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2"
+            onClick={() => onNavigate?.("cart")}
+            className="p-1.5 hover:bg-gray-100 rounded-full relative cursor-pointer text-[#0A2647] hover:scale-105 transition-transform"
           >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
+            <ShoppingCart className="w-4.5 h-4.5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-slate-900 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                {cartCount}
+              </span>
             )}
           </button>
+
+          {!user ? (
+            <button
+              onClick={() => onNavigate?.("login")}
+              className="bg-slate-900 text-white rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all flex items-center gap-1 shadow-sm hover:scale-[1.02] cursor-pointer"
+            >
+              Đăng nhập
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 pl-2 border-l border-gray-100">
+              {/* User Avatar Clickable to profile */}
+              <button
+                onClick={() => onNavigate?.("profile")}
+                className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-[#0A2647] text-white flex items-center justify-center font-bold text-xs border border-white shadow-sm hover:scale-105 transition-transform cursor-pointer"
+                title="Trang cá nhân"
+              >
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </button>
+
+              <div className="text-left hidden xl:block">
+                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider leading-none">
+                  {user.role}
+                </p>
+                <p className="text-xs font-bold text-[#0A2647] max-w-[80px] truncate">
+                  {user.name}
+                </p>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="p-1.5 hover:bg-red-50 rounded-full text-red-500 transition-colors cursor-pointer"
+                title="Đăng xuất"
+              >
+                <Power className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-full cursor-pointer"
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
+        </button>
       </div>
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t bg-white">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {filteredMenu.map((item) => (
+        <div className="lg:hidden mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl p-4 space-y-2 animate-fade-in">
+          {filteredMenu.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                onNavigate?.(item.id);
+                setIsMobileMenuOpen(false);
+              }}
+              className="block w-full text-left px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
+              style={{
+                backgroundColor:
+                  currentPage === item.id ? "#0A2647" : "transparent",
+                color: currentPage === item.id ? "white" : "#0A2647",
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+          {!user ? (
+            <button
+              onClick={() => onNavigate?.("login")}
+              className="w-full mt-4 py-3 rounded-xl text-white font-bold text-sm cursor-pointer"
+              style={{ backgroundColor: "#00BCD4" }}
+            >
+              Đăng nhập
+            </button>
+          ) : (
+            <div className="pt-2 border-t mt-2 flex flex-col gap-2">
               <button
-                key={item.id}
                 onClick={() => {
-                  onNavigate?.(item.id);
+                  onNavigate?.("profile");
                   setIsMobileMenuOpen(false);
                 }}
-                className="block w-full text-left px-3 py-2 rounded-md font-medium text-base"
-                style={{
-                  backgroundColor:
-                    currentPage === item.id ? "#0A2647" : "transparent",
-                  color: currentPage === item.id ? "white" : "#0A2647",
-                }}
+                className="w-full py-2.5 rounded-xl bg-gray-50 text-gray-700 font-semibold text-sm hover:bg-gray-100 transition-colors"
               >
-                {item.label}
+                👤 Trang cá nhân ({user.name})
               </button>
-            ))}
-            {!user ? (
-              <button
-                onClick={() => onNavigate?.("login")}
-                className="w-full mt-4 py-3 rounded-md text-white font-bold"
-                style={{ backgroundColor: "#00BCD4" }}
-              >
-                Đăng nhập
-              </button>
-            ) : (
               <button
                 onClick={handleLogout}
-                className="w-full mt-4 py-3 rounded-md border border-red-500 text-red-500 font-bold"
+                className="w-full py-2.5 rounded-xl border border-red-500 text-red-500 font-bold text-sm cursor-pointer"
               >
                 Đăng xuất
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </nav>

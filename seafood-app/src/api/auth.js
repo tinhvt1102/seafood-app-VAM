@@ -70,5 +70,26 @@ export const authApi = {
    */
   createBusinessProfile: async (formData) => {
     return await apiClient.post('/Profiles/business', formData);
+  },
+
+  /**
+   * Get user detail by ID
+   */
+  getUserById: async (id) => {
+    return await apiClient.get(`/Users/${id}`);
+  },
+
+  /**
+   * Get current user's seller profile details
+   */
+  getMySellerProfile: async () => {
+    return await apiClient.get('/Profiles/seller/me');
+  },
+
+  /**
+   * Get current user's business profile details
+   */
+  getMyBusinessProfile: async () => {
+    return await apiClient.get('/Profiles/business/me');
   }
 };
