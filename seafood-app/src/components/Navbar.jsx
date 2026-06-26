@@ -88,23 +88,23 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
   };
 
   return (
-    <nav className="sticky top-4 z-[999] w-11/12 md:w-2/3 lg:w-[60%] xl:w-[50%] mx-auto">
-      <div className="bg-white border border-gray-100 rounded-full shadow-lg px-5 py-1 flex items-center justify-between transition-all duration-300">
+    <nav className="sticky top-4 z-[999] w-[92%] xl:w-[85%] max-w-[1440px] mx-auto">
+      <div className="bg-white border border-gray-100 rounded-full shadow-lg px-6 py-2 flex items-center justify-between transition-all duration-300">
         {/* Logo */}
         <button
           onClick={() => onNavigate?.("home")}
           className="flex-shrink-0 flex items-center cursor-pointer hover:opacity-90 transition-opacity"
         >
-          <Logo imgHeight="h-7" />
+          <Logo imgHeight="h-10" />
         </button>
 
         {/* Desktop Menu */}
-        <div className="hidden lg:flex items-center gap-0.5">
+        <div className="hidden lg:flex items-center gap-1.5">
           {visibleMenu.map((item) => (
             <button
               key={item.id}
               onClick={() => onNavigate?.(item.id)}
-              className="px-3 py-1 rounded-full transition-all whitespace-nowrap text-xs font-bold cursor-pointer"
+              className="px-4 py-2 rounded-full transition-all whitespace-nowrap text-sm font-semibold cursor-pointer"
               style={{
                 backgroundColor:
                   currentPage === item.id ? "#0A2647" : "transparent",
@@ -120,7 +120,7 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
             <div className="relative pr-1" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="px-3 py-1 rounded-full transition-all whitespace-nowrap text-xs font-bold flex items-center gap-1 hover:bg-gray-100 cursor-pointer"
+                className="px-4 py-2 rounded-full transition-all whitespace-nowrap text-sm font-semibold flex items-center gap-1.5 hover:bg-gray-100 cursor-pointer"
                 style={{
                   backgroundColor:
                     isCurrentPageInDropdown || isDropdownOpen
@@ -134,12 +134,12 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
               >
                 <span>Thêm</span>
                 <ChevronDown
-                  className={`w-3 h-3 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                  className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl py-1.5 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
                   {dropdownMenu.map((item) => (
                     <button
                       key={item.id}
@@ -147,7 +147,7 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
                         onNavigate?.(item.id);
                         setIsDropdownOpen(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-xs transition-colors hover:bg-gray-50 font-semibold cursor-pointer"
+                      className="block w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 font-semibold cursor-pointer"
                       style={{
                         color: currentPage === item.id ? "#00BCD4" : "#0A2647",
                         backgroundColor:
@@ -164,15 +164,15 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
         </div>
 
         {/* Right Side Icons */}
-        <div className="hidden lg:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-3">
           {/* GIỎ HÀNG */}
           <button
             onClick={() => onNavigate?.("cart")}
-            className="p-1.5 hover:bg-gray-100 rounded-full relative cursor-pointer text-[#0A2647] hover:scale-105 transition-transform"
+            className="p-2.5 hover:bg-gray-100 rounded-full relative cursor-pointer text-[#0A2647] hover:scale-105 transition-transform"
           >
-            <ShoppingCart className="w-4.5 h-4.5" />
+            <ShoppingCart className="w-6 h-6" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-slate-900 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 bg-slate-900 text-white text-[10px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center">
                 {cartCount}
               </span>
             )}
@@ -181,36 +181,36 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
           {!user ? (
             <button
               onClick={() => onNavigate?.("login")}
-              className="bg-slate-900 text-white rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition-all flex items-center gap-1 shadow-sm hover:scale-[1.02] cursor-pointer"
+              className="bg-slate-900 text-white rounded-full px-5 py-2.5 text-sm font-bold uppercase tracking-wider hover:bg-slate-800 transition-all flex items-center gap-1.5 shadow-sm hover:scale-[1.02] cursor-pointer"
             >
               Đăng nhập
             </button>
           ) : (
-            <div className="flex items-center gap-2 pl-2 border-l border-gray-100">
+            <div className="flex items-center gap-3 pl-3 border-l border-gray-100">
               {/* User Avatar Clickable to profile */}
               <button
                 onClick={() => onNavigate?.("profile")}
-                className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-[#0A2647] text-white flex items-center justify-center font-bold text-xs border border-white shadow-sm hover:scale-105 transition-transform cursor-pointer"
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-[#0A2647] text-white flex items-center justify-center font-bold text-sm border border-white shadow-sm hover:scale-105 transition-transform cursor-pointer"
                 title="Trang cá nhân"
               >
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </button>
 
               <div className="text-left hidden xl:block">
-                <p className="text-[8px] text-gray-400 font-bold uppercase tracking-wider leading-none">
+                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none">
                   {user.role}
                 </p>
-                <p className="text-xs font-bold text-[#0A2647] max-w-[80px] truncate">
+                <p className="text-sm font-bold text-[#0A2647] max-w-[100px] truncate">
                   {user.name}
                 </p>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="p-1.5 hover:bg-red-50 rounded-full text-red-500 transition-colors cursor-pointer"
+                className="p-2.5 hover:bg-red-50 rounded-full text-red-500 transition-colors cursor-pointer"
                 title="Đăng xuất"
               >
-                <Power className="w-3.5 h-3.5" />
+                <Power className="w-5.5 h-5.5" />
               </button>
             </div>
           )}
