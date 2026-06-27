@@ -16,7 +16,7 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
     {
       id: "supply",
       label: "Sản lượng",
-      roles: ["farmer", "business", "admin", "buyer"],
+      roles: ["farmer", "seller", "business", "admin", "buyer"],
     },
     {
       id: "suppliers",
@@ -24,7 +24,7 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
       roles: ["business", "admin"],
     },
     { id: "retail", label: "Mua lẻ", roles: ["buyer", "guest", "admin"] },
-    { id: "dashboard", label: "Quản lý", roles: ["farmer", "admin"] },
+    { id: "dashboard", label: "Quản lý", roles: ["farmer", "seller", "admin"] },
     { id: "admin-dashboard", label: "Admin Dashboard", roles: ["admin"] },
     { id: "checkout", label: "Thanh toán", roles: ["buyer", "admin"] },
     { id: "b2b-cart", label: "Giỏ hàng B2B", roles: ["business", "admin"] },
@@ -32,17 +32,17 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
     {
       id: "listing-management",
       label: "Quản lý bài đăng",
-      roles: ["farmer", "admin"],
+      roles: ["farmer", "seller", "admin"],
     },
     {
       id: "order-management",
       label: "Lịch sử đơn hàng",
-      roles: ["buyer", "business", "farmer", "admin"],
+      roles: ["buyer", "business", "farmer", "seller", "admin"],
     },
     {
       id: "seller-center",
       label: "Seller Center",
-      roles: ["buyer", "business", "farmer", "admin"],
+      roles: ["buyer", "business", "farmer", "seller", "admin"],
     },
   ];
 

@@ -106,7 +106,14 @@ export default function App() {
   const handleLoginSuccess = (targetPage) => {
     const savedUser = JSON.parse(localStorage.getItem('currentUser'));
     setUser(savedUser);
-    setCurrentPage('home');
+    const role = savedUser?.role?.toLowerCase();
+    if (role === 'seller' || role === 'farmer') {
+      setCurrentPage('seller-center');
+    } else if (targetPage && typeof targetPage === 'string' && targetPage !== 'home') {
+      setCurrentPage(targetPage);
+    } else {
+      setCurrentPage('home');
+    }
     window.scrollTo(0, 0);
   };
 
@@ -140,11 +147,12 @@ export default function App() {
     if (role === 'admin') return true;
     switch (role) {
       case 'buyer':
-        return ['home', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'contact'].includes(page);
+        return ['home', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'contact', 'order-management'].includes(page);
       case 'farmer':
-        return ['home', 'supply', 'dashboard', 'contact'].includes(page);
+      case 'seller':
+        return ['home', 'supply', 'dashboard', 'seller-center', 'listing-management', 'order-management', 'contact'].includes(page);
       case 'business':
-        return ['home', 'supply', 'suppliers', 'contact', 'farm-profile'].includes(page);
+        return ['home', 'supply', 'suppliers', 'contact', 'farm-profile', 'b2b-cart', 'order-management'].includes(page);
       default:
         return ['home', 'contact'].includes(page);
     }

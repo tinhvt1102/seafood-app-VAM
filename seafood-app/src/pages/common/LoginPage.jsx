@@ -34,6 +34,7 @@ export function LoginPage({ onNavigate, setCart }) {
       } else if (isLogin) {
         // ================= XỬ LÝ ĐĂNG NHẬP =================
         const response = await authApi.login(email.trim(), password);
+        const userRole = response.user?.role || response.role || "buyer";
         localStorage.setItem("token", response.token);
         localStorage.setItem(
           "currentUser",
@@ -41,14 +42,19 @@ export function LoginPage({ onNavigate, setCart }) {
             id: response.user?.id || response.id,
             email: response.user?.email || response.email || email,
             name: response.user?.name || response.name || "User",
-            role: response.user?.role || response.role || "buyer",
+            role: userRole,
             status: response.user?.status || response.status || "active",
             token: response.token,
           }),
         );
 
         toast.success(`Đăng nhập thành công!`);
-        onNavigate("home");
+        const normalizedRole = userRole.toLowerCase();
+        if (normalizedRole === "seller" || normalizedRole === "farmer") {
+          onNavigate("seller-center");
+        } else {
+          onNavigate("home");
+        }
       } else {
         if (password !== confirmPassword) {
           toast.error("Mật khẩu xác nhận không khớp!");
@@ -95,6 +101,7 @@ export function LoginPage({ onNavigate, setCart }) {
       }
 
       const apiResponse = await authApi.googleLogin(idToken);
+      const userRole = apiResponse.user?.role || apiResponse.role || "buyer";
 
       localStorage.setItem("token", apiResponse.token);
       localStorage.setItem(
@@ -103,14 +110,19 @@ export function LoginPage({ onNavigate, setCart }) {
           id: apiResponse.user?.id || apiResponse.id,
           email: apiResponse.user?.email || apiResponse.email,
           name: apiResponse.user?.name || apiResponse.name || "Google User",
-          role: apiResponse.user?.role || apiResponse.role || "buyer",
+          role: userRole,
           status: apiResponse.user?.status || apiResponse.status || "active",
           token: apiResponse.token,
         }),
       );
 
       toast.success("Đăng nhập qua Google thành công!");
-      onNavigate("home");
+      const normalizedRole = userRole.toLowerCase();
+      if (normalizedRole === "seller" || normalizedRole === "farmer") {
+        onNavigate("seller-center");
+      } else {
+        onNavigate("home");
+      }
     } catch (error) {
       console.error("Google login error:", error);
       toast.error(error.message || "Đăng nhập qua Google thất bại!");

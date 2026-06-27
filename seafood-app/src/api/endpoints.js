@@ -38,5 +38,18 @@ export const ENDPOINTS = {
     UPDATE: (itemId) => `/cart/items/${itemId}`,
     REMOVE: (itemId) => `/cart/items/${itemId}`,
     CLEAR: '/cart/clear',
+  },
+  PROFILES: {
+    CREATE_SELLER: '/Profiles/seller',
+    CREATE_BUSINESS: '/Profiles/business',
+    MY_SELLER: '/Profiles/seller/me',
+    MY_BUSINESS: '/Profiles/business/me',
+  },
+  ADMIN_PROFILES: {
+    PENDING_SELLERS: '/admin/AdminProfiles/seller/pending',
+    PENDING_BUSINESSES: '/admin/AdminProfiles/business/pending',
+    APPROVE_SELLER: (id) => `/admin/AdminProfiles/seller/${id}/approve`,
+    APPROVE_BUSINESS: (id) => `/admin/AdminProfiles/business/${id}/approve`,
   }
 };
+
