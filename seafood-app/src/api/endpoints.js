@@ -12,12 +12,17 @@ export const ENDPOINTS = {
     LOGOUT: '/Auth/logout',
   },
   PRODUCTS: {
+    LIST: '/Products',
     RETAIL_LIST: '/products/retail',
     B2B_LIST: '/products/b2b',
-    DETAIL: (id) => `/products/${id}`,
-    CREATE: '/products',
-    UPDATE: (id) => `/products/${id}`,
-    DELETE: (id) => `/products/${id}`,
+    DETAIL: (id) => `/Products/${id}`,
+    CREATE: '/Products',
+    UPDATE: (id) => `/Products/${id}`,
+    APPROVE: (id) => `/Products/${id}/approve`,
+    DELETE: (id) => `/Products/${id}`,
+  },
+  CATEGORIES: {
+    LIST: '/Categorys',
   },
   SUPPLIERS: {
     LIST: '/suppliers',

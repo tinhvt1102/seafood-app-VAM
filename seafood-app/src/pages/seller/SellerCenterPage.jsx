@@ -1,12 +1,15 @@
-import { useState, useRef } from 'react';
-import { Upload, Save, Send, Package, Fish, AlertCircle, BarChart3, X } from 'lucide-react';
-// 1. Thêm import toast và Toaster
+import { useState, useRef, useEffect } from 'react';
+import { Upload, Save, Send, Package, Fish, AlertCircle, BarChart3, X, Loader2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import { productApi, categoryApi } from '../../api/products';
 
 export function SellerCenterPage({ onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Supply form state
+  // Supply form state — maps to CreateProductDto fields
   const [supplyForm, setSupplyForm] = useState({
     seafoodType: '',
     size: '',
@@ -15,31 +18,52 @@ export function SellerCenterPage({ onNavigate }) {
     proposedPrice: '',
     location: '',
     certifications: [],
-    images: [],
-    description: ''
+    images: [],       // File objects for upload
+    imagePreviews: [], // URL.createObjectURL for preview
+    description: '',
+    categoryId: '',
   });
 
-  // Product form state
+  // Product form state — maps to CreateProductDto fields
   const [productForm, setProductForm] = useState({
     productName: '',
-    category: '',
+    categoryId: '',
     price: '',
     stock: '',
     unit: 'kg',
-    images: [],
+    images: [],       // File objects for upload
+    imagePreviews: [], // URL.createObjectURL for preview
     description: ''
   });
 
-  // Refs cho các input tệp ẩn
+  // Refs cho các input file ẩn
   const supplyImageRef = useRef(null);
   const productImageRef = useRef(null);
 
   const certificationOptions = ['VietGAP', 'ASC', 'GlobalG.A.P', 'BAP', 'MSC'];
   const seafoodTypes = ['Tôm sú', 'Tôm thẻ', 'Cá Tra', 'Cá Basa', 'Cua biển', 'Mực', 'Ghẹ'];
-  const categoryOptions = ['Tôm tươi sống', 'Cá tươi', 'Cá đông lạnh', 'Hải sản chế biến', 'Mực khô', 'Khô hải sản'];
   const unitOptions = ['kg', 'tấn', 'con', 'hộp', 'thùng'];
 
-  // Mock statistics
+  // Fetch categories từ API khi mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const data = await categoryApi.getCategories({ pageSize: 100 });
+        // API trả về { items: [...], totalCount, ... } hoặc mảng trực tiếp
+        const items = data?.items || data || [];
+        setCategories(items);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+        toast.error('Không thể tải danh mục. Vui lòng thử lại.');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Mock statistics (sẽ fetch từ API sau)
   const stats = {
     totalListings: 15,
     pendingListings: 3,
@@ -49,29 +73,108 @@ export function SellerCenterPage({ onNavigate }) {
 
   const handleSaveDraft = (type) => {
     console.log(`Dữ liệu nháp ${type}:`, type === 'supply' ? supplyForm : productForm);
-    // 2. Chuyển thành toast.success
     toast.success(`Đã lưu nháp ${type === 'supply' ? 'sản lượng' : 'sản phẩm'} thành công!`);
   };
 
-  const handleSubmitForApproval = (type) => {
-    const currentForm = type === 'supply' ? supplyForm : productForm;
-    
-    // Kiểm tra nhanh validation cơ bản - Chuyển thành toast.error
-    if (type === 'supply' && (!supplyForm.seafoodType || !supplyForm.size || !supplyForm.quantity || !supplyForm.harvestDate || !supplyForm.proposedPrice || !supplyForm.location || !supplyForm.description)) {
-      toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
-      return;
-    }
-    if (type === 'product' && (!productForm.productName || !productForm.category || !productForm.price || !productForm.stock || !productForm.description)) {
-      toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
-      return;
+  /**
+   * Gửi bài đăng lên API để xét duyệt
+   * Cả supply và product đều gọi POST /api/Products (CreateProductDto)
+   */
+  const handleSubmitForApproval = async (type) => {
+    if (isSubmitting) return;
+
+    // Validation
+    if (type === 'supply') {
+      if (!supplyForm.seafoodType || !supplyForm.size || !supplyForm.quantity ||
+          !supplyForm.harvestDate || !supplyForm.proposedPrice || !supplyForm.location ||
+          !supplyForm.description || !supplyForm.categoryId) {
+        toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
+        return;
+      }
+    } else {
+      if (!productForm.productName || !productForm.categoryId || !productForm.price ||
+          !productForm.stock || !productForm.description) {
+        toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
+        return;
+      }
     }
 
-    console.log(`Dữ liệu gửi duyệt ${type}:`, currentForm);
-    // 3. Chuyển thành toast.success hoặc thông báo dạng tùy biến
-    toast.success(`Đã gửi xét duyệt thành công! Admin sẽ xem xét trong thời gian sớm nhất.`, {
-      duration: 4000
-    });
-    onNavigate('listing-management');
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+
+      if (type === 'supply') {
+        // Map supply form → CreateProductDto fields
+        const name = `${supplyForm.seafoodType} - Size ${supplyForm.size}`;
+        formData.append('Name', name);
+        formData.append('CategoryId', supplyForm.categoryId);
+        formData.append('Price', supplyForm.proposedPrice);
+        formData.append('Quantity', supplyForm.quantity);
+        formData.append('Unit', 'kg');
+
+        // Gộp thông tin chi tiết vào Description
+        const certText = supplyForm.certifications.length > 0
+          ? `\nChứng nhận: ${supplyForm.certifications.join(', ')}`
+          : '';
+        const description = [
+          supplyForm.description,
+          `\nĐịa điểm: ${supplyForm.location}`,
+          `\nNgày thu hoạch: ${supplyForm.harvestDate}`,
+          `\nSize: ${supplyForm.size}`,
+          certText
+        ].join('');
+        formData.append('Description', description);
+
+        // Đính kèm file ảnh
+        supplyForm.images.forEach(file => {
+          formData.append('Images', file);
+        });
+      } else {
+        // Map product form → CreateProductDto fields
+        formData.append('Name', productForm.productName);
+        formData.append('CategoryId', productForm.categoryId);
+        formData.append('Price', productForm.price);
+        formData.append('Quantity', productForm.stock);
+        formData.append('Unit', productForm.unit);
+        formData.append('Description', productForm.description);
+
+        // Đính kèm file ảnh
+        productForm.images.forEach(file => {
+          formData.append('Images', file);
+        });
+      }
+
+      await productApi.createProduct(formData);
+
+      toast.success('Đã gửi xét duyệt thành công! Admin sẽ xem xét trong thời gian sớm nhất.', {
+        duration: 4000
+      });
+
+      // Reset form sau khi thành công
+      if (type === 'supply') {
+        // Revoke preview URLs to free memory
+        supplyForm.imagePreviews.forEach(url => URL.revokeObjectURL(url));
+        setSupplyForm({
+          seafoodType: '', size: '', quantity: '', harvestDate: '',
+          proposedPrice: '', location: '', certifications: [],
+          images: [], imagePreviews: [], description: '', categoryId: '',
+        });
+      } else {
+        productForm.imagePreviews.forEach(url => URL.revokeObjectURL(url));
+        setProductForm({
+          productName: '', categoryId: '', price: '', stock: '',
+          unit: 'kg', images: [], imagePreviews: [], description: ''
+        });
+      }
+
+      onNavigate('listing-management');
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast.error(error.message || 'Gửi bài đăng thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCertificationToggle = (cert) => {
@@ -83,44 +186,54 @@ export function SellerCenterPage({ onNavigate }) {
     }));
   };
 
-  // Trình xử lý tải file lên giả lập
+  // Upload file handler — lưu cả File object (để gửi API) và preview URL (để hiển thị)
   const handleFileChange = (e, type) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      const newImages = filesArray.map(file => URL.createObjectURL(file));
 
       if (type === 'supply') {
         if (supplyForm.images.length >= 5) {
           toast.error('Tối đa chỉ được tải lên 5 ảnh sản lượng!');
           return;
         }
+        const newPreviews = filesArray.map(file => URL.createObjectURL(file));
         setSupplyForm(prev => ({
           ...prev,
-          images: [...prev.images, ...newImages].slice(0, 5)
+          images: [...prev.images, ...filesArray].slice(0, 5),
+          imagePreviews: [...prev.imagePreviews, ...newPreviews].slice(0, 5)
         }));
       } else {
         if (productForm.images.length >= 8) {
           toast.error('Tối đa chỉ được tải lên 8 ảnh sản phẩm!');
           return;
         }
+        const newPreviews = filesArray.map(file => URL.createObjectURL(file));
         setProductForm(prev => ({
           ...prev,
-          images: [...prev.images, ...newImages].slice(0, 8)
+          images: [...prev.images, ...filesArray].slice(0, 8),
+          imagePreviews: [...prev.imagePreviews, ...newPreviews].slice(0, 8)
         }));
       }
+
+      // Reset input để có thể chọn lại cùng file
+      e.target.value = '';
     }
   };
 
   const removeImage = (indexToRemove, type) => {
     if (type === 'supply') {
+      URL.revokeObjectURL(supplyForm.imagePreviews[indexToRemove]);
       setSupplyForm(prev => ({
         ...prev,
-        images: prev.images.filter((_, idx) => idx !== indexToRemove)
+        images: prev.images.filter((_, idx) => idx !== indexToRemove),
+        imagePreviews: prev.imagePreviews.filter((_, idx) => idx !== indexToRemove)
       }));
     } else {
+      URL.revokeObjectURL(productForm.imagePreviews[indexToRemove]);
       setProductForm(prev => ({
         ...prev,
-        images: prev.images.filter((_, idx) => idx !== indexToRemove)
+        images: prev.images.filter((_, idx) => idx !== indexToRemove),
+        imagePreviews: prev.imagePreviews.filter((_, idx) => idx !== indexToRemove)
       }));
     }
     toast.success('Đã xóa ảnh');
@@ -128,7 +241,6 @@ export function SellerCenterPage({ onNavigate }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 4. Đặt thẻ Toaster ở đây để hiển thị thông báo lơ lửng trên màn hình */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -145,7 +257,7 @@ export function SellerCenterPage({ onNavigate }) {
           <div className="flex">
             <button
               onClick={() => setActiveTab('overview')}
-              className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2"
+              className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2 cursor-pointer"
               style={{
                 borderBottomColor: activeTab === 'overview' ? '#00BCD4' : 'transparent',
                 color: activeTab === 'overview' ? '#00BCD4' : '#6B7280',
@@ -157,7 +269,7 @@ export function SellerCenterPage({ onNavigate }) {
             </button>
             <button
               onClick={() => setActiveTab('supply')}
-              className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2"
+              className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2 cursor-pointer"
               style={{
                 borderBottomColor: activeTab === 'supply' ? '#00BCD4' : 'transparent',
                 color: activeTab === 'supply' ? '#00BCD4' : '#6B7280',
@@ -169,7 +281,7 @@ export function SellerCenterPage({ onNavigate }) {
             </button>
             <button
               onClick={() => setActiveTab('product')}
-              className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2"
+              className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2 cursor-pointer"
               style={{
                 borderBottomColor: activeTab === 'product' ? '#00BCD4' : 'transparent',
                 color: activeTab === 'product' ? '#00BCD4' : '#6B7280',
@@ -221,7 +333,7 @@ export function SellerCenterPage({ onNavigate }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
                     onClick={() => setActiveTab('supply')}
-                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left"
+                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
                     style={{ borderColor: '#00BCD4' }}
                   >
                     <Package className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
@@ -231,7 +343,7 @@ export function SellerCenterPage({ onNavigate }) {
 
                   <button
                     onClick={() => setActiveTab('product')}
-                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left"
+                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
                     style={{ borderColor: '#00BCD4' }}
                   >
                     <Fish className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
@@ -241,7 +353,7 @@ export function SellerCenterPage({ onNavigate }) {
 
                   <button
                     onClick={() => onNavigate('listing-management')}
-                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left"
+                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
                     style={{ borderColor: '#00BCD4' }}
                   >
                     <BarChart3 className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
@@ -268,7 +380,7 @@ export function SellerCenterPage({ onNavigate }) {
               </div>
             </div>
           ) : activeTab === 'supply' ? (
-            // Supply Form
+            // Supply Form — connected to POST /api/Products
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: '#0A2647' }}>Đăng bán sản lượng</h2>
@@ -296,6 +408,26 @@ export function SellerCenterPage({ onNavigate }) {
 
                   <div>
                     <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                      Danh mục <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={supplyForm.categoryId}
+                      onChange={(e) => setSupplyForm({ ...supplyForm, categoryId: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
+                      style={{ borderColor: '#e5e7eb' }}
+                      disabled={loadingCategories}
+                    >
+                      <option value="">{loadingCategories ? 'Đang tải...' : 'Chọn danh mục'}</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                       Size <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -307,9 +439,7 @@ export function SellerCenterPage({ onNavigate }) {
                       style={{ borderColor: '#e5e7eb' }}
                     />
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                       Sản lượng (kg) <span className="text-red-500">*</span>
@@ -323,7 +453,9 @@ export function SellerCenterPage({ onNavigate }) {
                       style={{ borderColor: '#e5e7eb' }}
                     />
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                       Ngày thu hoạch <span className="text-red-500">*</span>
@@ -336,9 +468,7 @@ export function SellerCenterPage({ onNavigate }) {
                       style={{ borderColor: '#e5e7eb' }}
                     />
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                       Giá đề xuất (VNĐ/kg) <span className="text-red-500">*</span>
@@ -352,20 +482,20 @@ export function SellerCenterPage({ onNavigate }) {
                       style={{ borderColor: '#e5e7eb' }}
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
-                      Địa điểm nuôi <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={supplyForm.location}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, location: e.target.value })}
-                      placeholder="VD: Cà Mau"
-                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
-                    />
-                  </div>
+                <div>
+                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    Địa điểm nuôi <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={supplyForm.location}
+                    onChange={(e) => setSupplyForm({ ...supplyForm, location: e.target.value })}
+                    placeholder="VD: Cà Mau"
+                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
+                    style={{ borderColor: '#e5e7eb' }}
+                  />
                 </div>
 
                 <div>
@@ -398,17 +528,17 @@ export function SellerCenterPage({ onNavigate }) {
                   <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                     Hình ảnh <span className="text-red-500">*</span>
                   </label>
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    ref={supplyImageRef} 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    ref={supplyImageRef}
+                    className="hidden"
                     onChange={(e) => handleFileChange(e, 'supply')}
                   />
-                  <div 
+                  <div
                     onClick={() => supplyImageRef.current?.click()}
-                    className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors mb-4" 
+                    className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors mb-4"
                     style={{ borderColor: '#e5e7eb' }}
                   >
                     <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -416,15 +546,15 @@ export function SellerCenterPage({ onNavigate }) {
                     <p className="text-sm text-gray-400">PNG, JPG tối đa 10MB (Tối đa 5 ảnh)</p>
                   </div>
 
-                  {supplyForm.images.length > 0 && (
+                  {supplyForm.imagePreviews.length > 0 && (
                     <div className="grid grid-cols-5 gap-4">
-                      {supplyForm.images.map((img, idx) => (
+                      {supplyForm.imagePreviews.map((img, idx) => (
                         <div key={idx} className="relative aspect-square rounded-md overflow-hidden border">
                           <img src={img} alt="preview" className="w-full h-full object-cover" />
-                          <button 
+                          <button
                             type="button"
                             onClick={() => removeImage(idx, 'supply')}
-                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 cursor-pointer"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -458,7 +588,8 @@ export function SellerCenterPage({ onNavigate }) {
                 <div className="flex gap-4">
                   <button
                     onClick={() => handleSaveDraft('supply')}
-                    className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     style={{ borderColor: '#0A2647', color: '#0A2647' }}
                   >
                     <Save className="w-5 h-5" />
@@ -466,17 +597,27 @@ export function SellerCenterPage({ onNavigate }) {
                   </button>
                   <button
                     onClick={() => handleSubmitForApproval('supply')}
-                    className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     style={{ backgroundColor: '#00BCD4' }}
                   >
-                    <Send className="w-5 h-5" />
-                    Gửi xét duyệt
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Đang gửi...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Gửi xét duyệt
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            // Product Form
+            // Product Form — connected to POST /api/Products
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: '#0A2647' }}>Đăng bán sản phẩm</h2>
@@ -504,14 +645,15 @@ export function SellerCenterPage({ onNavigate }) {
                       Danh mục <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      value={productForm.categoryId}
+                      onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
                       style={{ borderColor: '#e5e7eb' }}
+                      disabled={loadingCategories}
                     >
-                      <option value="">Chọn danh mục</option>
-                      {categoryOptions.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                      <option value="">{loadingCategories ? 'Đang tải...' : 'Chọn danh mục'}</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
                     </select>
                   </div>
@@ -567,17 +709,17 @@ export function SellerCenterPage({ onNavigate }) {
                   <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                     Hình ảnh sản phẩm <span className="text-red-500">*</span>
                   </label>
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    ref={productImageRef} 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    ref={productImageRef}
+                    className="hidden"
                     onChange={(e) => handleFileChange(e, 'product')}
                   />
-                  <div 
+                  <div
                     onClick={() => productImageRef.current?.click()}
-                    className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors mb-4" 
+                    className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors mb-4"
                     style={{ borderColor: '#e5e7eb' }}
                   >
                     <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -585,15 +727,15 @@ export function SellerCenterPage({ onNavigate }) {
                     <p className="text-sm text-gray-400">PNG, JPG tối đa 10MB (Tối đa 8 ảnh)</p>
                   </div>
 
-                  {productForm.images.length > 0 && (
+                  {productForm.imagePreviews.length > 0 && (
                     <div className="grid grid-cols-4 gap-4">
-                      {productForm.images.map((img, idx) => (
+                      {productForm.imagePreviews.map((img, idx) => (
                         <div key={idx} className="relative aspect-square rounded-md overflow-hidden border">
                           <img src={img} alt="preview" className="w-full h-full object-cover" />
-                          <button 
+                          <button
                             type="button"
                             onClick={() => removeImage(idx, 'product')}
-                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 cursor-pointer"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -627,7 +769,8 @@ export function SellerCenterPage({ onNavigate }) {
                 <div className="flex gap-4">
                   <button
                     onClick={() => handleSaveDraft('product')}
-                    className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     style={{ borderColor: '#0A2647', color: '#0A2647' }}
                   >
                     <Save className="w-5 h-5" />
@@ -635,11 +778,21 @@ export function SellerCenterPage({ onNavigate }) {
                   </button>
                   <button
                     onClick={() => handleSubmitForApproval('product')}
-                    className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     style={{ backgroundColor: '#00BCD4' }}
                   >
-                    <Send className="w-5 h-5" />
-                    Gửi xét duyệt
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Đang gửi...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Gửi xét duyệt
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

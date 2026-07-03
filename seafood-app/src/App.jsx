@@ -19,6 +19,7 @@ import { ListingManagementPage } from './pages/seller/ListingManagementPage';
 import { OrderManagementPage } from './pages/seller/OrderManagementPage';
 import { SellerCenterPage } from './pages/seller/SellerCenterPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { ProductApprovalPage } from './pages/admin/ProductApprovalPage';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function App() {
@@ -222,6 +223,8 @@ export default function App() {
         return <SellerCenterPage onNavigate={handleNavigate} />;
       case 'admin-dashboard':
         return <AdminDashboardPage onNavigate={handleNavigate} />;
+      case 'product-approval':
+        return <ProductApprovalPage onNavigate={handleNavigate} />;
       default:
         return <Homepage onNavigate={handleNavigate} />;
     }

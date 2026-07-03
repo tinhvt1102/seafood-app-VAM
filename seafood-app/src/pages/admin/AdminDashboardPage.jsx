@@ -1008,14 +1008,10 @@ export function AdminDashboardPage({ onNavigate }) {
                       Hồ sơ đăng ký ({totalPendingProfiles})
                     </button>
                     <button
-                      onClick={() => setApprovalCategory("listings")}
-                      className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
-                        approvalCategory === "listings"
-                          ? "bg-white shadow text-[#0A2647]"
-                          : "text-gray-500 hover:text-gray-700"
-                      }`}
+                      onClick={() => onNavigate?.("product-approval")}
+                      className={`px-4 py-2 text-xs font-semibold rounded-md transition-all text-gray-500 hover:text-gray-700`}
                     >
-                      Bài đăng hệ thống ({pendingApprovals.length})
+                      Bài đăng hệ thống
                     </button>
                   </div>
                 </div>
@@ -1400,7 +1396,7 @@ export function AdminDashboardPage({ onNavigate }) {
             </button>
 
             <button
-              onClick={() => onNavigate?.("listing-management")}
+              onClick={() => onNavigate?.("product-approval")}
               className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer"
               style={{ borderColor: "#00BCD4" }}
             >
