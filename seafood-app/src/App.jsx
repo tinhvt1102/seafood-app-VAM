@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { Homepage, retailProducts } from './pages/common/Homepage';
+import { Homepage } from './pages/common/Homepage';
 import { SupplyPage } from './pages/buyer/SupplyPage';
 import { SuppliersPage } from './pages/buyer/SuppliersPage';
 import { RetailPage } from './pages/buyer/RetailPage';
@@ -20,15 +20,44 @@ import { OrderManagementPage } from './pages/seller/OrderManagementPage';
 import { SellerCenterPage } from './pages/seller/SellerCenterPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { ProductApprovalPage } from './pages/admin/ProductApprovalPage';
+import { AdminOrderManagementPage } from './pages/admin/AdminOrderManagementPage';
+import { productApi } from './api/products';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [pageData, setPageData] = useState({});
   const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState(() => {
     return JSON.parse(localStorage.getItem('cart')) || [];
   });
+
+  // Tải danh sách sản phẩm từ API
+  useEffect(() => {
+    const fetchApprovedProducts = async () => {
+      try {
+        const res = await productApi.getProducts({ pageSize: 100, status: 'approved' });
+        const items = res?.items || res || [];
+        if (items.length > 0) {
+          const mapped = items.map(item => ({
+            id: String(item.id),
+            name: item.name,
+            image: item.imageUrls?.[0] || item.image || item.imageUrl || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+            price: typeof item.price === 'number' ? `${item.price.toLocaleString('vi-VN')}đ/kg` : item.price,
+            origin: item.origin || 'Việt Nam',
+            rating: item.rating || 5,
+            reviews: item.reviews || 0,
+            description: item.description || ''
+          }));
+          setProducts(mapped);
+        }
+      } catch (err) {
+        console.error('Lỗi tải sản phẩm từ API, sử dụng dữ liệu mặc định:', err);
+      }
+    };
+    fetchApprovedProducts();
+  }, []);
 
   // 1. Tải thông tin User và Giỏ hàng từ LocalStorage khi vào ứng dụng
   useEffect(() => {
@@ -140,6 +169,7 @@ export default function App() {
 
   // 6. Hệ thống phân quyền truy cập trang (Role-based Authentication)
   const canAccess = (page) => {
+    if (page === 'product-detail') return true;
     if (user && page === 'profile') return true;
     if (!user) {
       return ['home', 'login', 'contact', 'retail', 'product-detail', 'cart', 'checkout'].includes(page);
@@ -162,19 +192,18 @@ export default function App() {
   // 7. Render trang dựa trên phân quyền và trạng thái điều hướng
   const renderPage = () => {
     if (!canAccess(currentPage)) {
-      return <Homepage onNavigate={handleNavigate} />;
+      return <Homepage onNavigate={handleNavigate} products={products} />;
     }
 
     switch (currentPage) {
       case 'home':
-        return <Homepage onAddToCart={handleAddToCart} onNavigate={handleNavigate} />;
+        return <Homepage onAddToCart={handleAddToCart} onNavigate={handleNavigate} products={products} />;
       case 'retail':
         return (
           <RetailPage
-            allProducts={retailProducts}
+            allProducts={products}
             onNavigate={handleNavigate}
             onAddToCart={handleAddToCart}
-
           />
         );
       case 'product-detail':
@@ -182,7 +211,7 @@ export default function App() {
           <ProductDetailPage
             productId={pageData.id}
             onNavigate={handleNavigate}
-            allProducts={retailProducts}
+            allProducts={products}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
           />
@@ -225,6 +254,8 @@ export default function App() {
         return <AdminDashboardPage onNavigate={handleNavigate} />;
       case 'product-approval':
         return <ProductApprovalPage onNavigate={handleNavigate} />;
+      case 'admin-orders':
+        return <AdminOrderManagementPage onNavigate={handleNavigate} />;
       default:
         return <Homepage onNavigate={handleNavigate} />;
     }

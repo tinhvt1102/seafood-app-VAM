@@ -1,10 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck } from 'lucide-react';
 import { ProductCard } from '../../components/ProductCard';
+import { productApi } from '../../api/products';
 
 export function ProductDetailPage({ productId, allProducts = [], onNavigate, onAddToCart, onBuyNow }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Mỗi khi đổi sản phẩm, reset lại ảnh được chọn về ảnh đầu tiên (ảnh index 0)
   useEffect(() => {
@@ -12,32 +15,49 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
     setQuantity(1);
   }, [productId]);
 
-  // 1. CHUẨN HÓA LOGIC TÌM KIẾM: Tìm kiếm sản phẩm thật dựa trên prop allProducts được truyền xuống từ App
-  const product = useMemo(() => {
-    if (!productId || allProducts.length === 0) return allProducts[0] || null;
+  // Tải chi tiết sản phẩm từ API
+  useEffect(() => {
+    if (!productId) return;
     
-    return allProducts.find((item) => {
-      // Ép kiểu về chuỗi, loại bỏ các ký tự trống hoặc tiền tố để so sánh chính xác nhất
-      const cleanItemId = String(item.id).trim();
-      const cleanTargetId = String(productId).trim();
-      return cleanItemId === cleanTargetId;
-    }) || allProducts[0];
-  }, [productId, allProducts]);
+    const fetchProductDetail = async () => {
+      setLoading(true);
+      try {
+        const data = await productApi.getProductById(productId);
+        if (data) {
+          const mapped = {
+            id: String(data.id),
+            name: data.name,
+            image: data.imageUrls?.[0] || data.image || data.imageUrl || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+            price: typeof data.price === 'number' ? `${data.price.toLocaleString('vi-VN')}đ/kg` : data.price,
+            origin: data.origin || 'Việt Nam',
+            rating: data.rating || 5,
+            reviews: data.reviews || 0,
+            description: data.description || '',
+            size: data.size || '',
+            harvestDate: data.harvestDate || '',
+            images: data.imageUrls || (data.imageUrl ? [data.imageUrl] : []),
+            supplier: data.supplier
+          };
+          setProduct(mapped);
+        } else {
+          const found = allProducts.find((item) => String(item.id).trim() === String(productId).trim());
+          setProduct(found || allProducts[0] || null);
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải chi tiết sản phẩm từ API, sử dụng dữ liệu dự phòng:', err);
+        const found = allProducts.find((item) => String(item.id).trim() === String(productId).trim());
+        setProduct(found || allProducts[0] || null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Nếu không có bất kỳ dữ liệu sản phẩm nào, hiển thị trạng thái trống
-  if (!product) {
-    return (
-      <div className="text-center py-20 bg-white rounded-lg shadow-sm">
-        <p className="text-gray-500">Không tìm thấy thông tin sản phẩm.</p>
-        <button onClick={() => onNavigate('home')} className="text-[#00BCD4] mt-4 font-medium hover:underline">
-          Quay lại trang chủ
-        </button>
-      </div>
-    );
-  }
+    fetchProductDetail();
+  }, [productId, allProducts]);
 
   // 2. LOGIC PHÒNG THỦ DỮ LIỆU: Nếu sản phẩm thật từ Homepage chỉ có trường 'image' đơn, tự tạo mảng images gồm 3 phần tử để giao diện gallery không bị crash
   const productImages = useMemo(() => {
+    if (!product) return [];
     if (product.images && product.images.length > 0) return product.images;
     if (product.image) return [product.image, product.image, product.image];
     return ['https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080'];
@@ -45,6 +65,7 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
 
   // 3. TẠO DỮ LIỆU NHÀ CUNG CẤP MẶC ĐỊNH: Nếu mảng thật thiếu trường 'supplier', tự sinh để giao diện hiển thị mượt mà
   const supplierInfo = useMemo(() => {
+    if (!product) return {};
     return product.supplier || {
       name: `Hộ nuôi Hải Sản ${product.origin || 'VietGAP'}`,
       farmId: '1',
@@ -56,6 +77,7 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
 
   // 4. LỌC SẢN PHẨM TƯƠNG TỰ: Lọc từ kho dữ liệu thật, bỏ qua sản phẩm hiện tại
   const similarProducts = useMemo(() => {
+    if (!product) return [];
     return allProducts
       .filter((item) => String(item.id) !== String(product.id))
       .slice(0, 4)
@@ -73,6 +95,7 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
 
   // SỬA LỖI NaN: Hàm bóc tách chuỗi giá và ép về số nguyên sạch (Ví dụ "450.000đ/kg" -> 450000)
   const getCleanProductForCart = () => {
+    if (!product) return {};
     let numericPrice = 0;
     if (typeof product.price === 'number') {
       numericPrice = product.price;
@@ -85,6 +108,29 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
       price: numericPrice // Thay thế chuỗi bằng số nguyên để App không bị lỗi tính toán tổng tiền
     };
   };
+
+  // Nếu đang loading và chưa có thông tin sản phẩm, hiển thị skeleton hoặc trạng thái chờ
+  if (loading && !product) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500 font-medium">Đang tải chi tiết sản phẩm...</p>
+      </div>
+    );
+  }
+
+  // Nếu không có bất kỳ dữ liệu sản phẩm nào, hiển thị trạng thái trống
+  if (!product) {
+    return (
+      <div className="text-center py-20 bg-white rounded-lg shadow-sm">
+        <p className="text-gray-500">Không tìm thấy thông tin sản phẩm.</p>
+        <button onClick={() => onNavigate('home')} className="text-[#00BCD4] mt-4 font-medium hover:underline">
+          Quay lại trang chủ
+        </button>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -138,7 +184,7 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
               <div className="bg-gray-50 p-4 rounded-lg mb-6">
                 <div className="flex items-baseline gap-3 mb-2">
                   <span className="text-3xl font-bold" style={{ color: '#d4183d' }}>
-                    {product.price.includes('/kg') ? product.price : `${product.price}/kg`}
+                    {String(product.price || '').includes('/kg') ? product.price : `${product.price}/kg`}
                   </span>
                   {product.originalPrice && (
                     <span className="text-lg text-gray-400 line-through">{product.originalPrice}</span>

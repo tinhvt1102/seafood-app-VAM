@@ -12,45 +12,46 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
   // ĐÃ XÓA: Bỏ hoàn toàn dòng const [user, setUser] = useState(...) gây lỗi lệch state cũ
 
   const menuItems = [
-    { id: "home", label: "Trang chủ", roles: ["all"] },
+    { id: "home", label: "Trang chủ", roles: ["guest"] },
     {
       id: "supply",
       label: "Sản lượng",
-      roles: ["farmer", "seller", "business", "admin", "buyer"],
+      roles: ["business"],
     },
     {
       id: "suppliers",
       label: "Tìm nguồn hải sản",
-      roles: ["business", "admin"],
+      roles: ["business"],
     },
-    { id: "retail", label: "Mua lẻ", roles: ["buyer", "guest", "admin"] },
-    { id: "dashboard", label: "Quản lý", roles: ["farmer", "seller", "admin"] },
+    { id: "retail", label: "Mua lẻ", roles: ["buyer", "guest"] },
+    { id: "dashboard", label: "Quản lý", roles: ["farmer", "seller"] },
     { id: "admin-dashboard", label: "Admin Dashboard", roles: ["admin"] },
-    { id: "checkout", label: "Thanh toán", roles: ["buyer", "admin"] },
-    { id: "b2b-cart", label: "Giỏ hàng B2B", roles: ["business", "admin"] },
-    { id: "contact", label: "Liên hệ", roles: ["all"] },
+    { id: "admin-orders", label: "Quản lý đơn hàng", roles: ["admin"] },
+    { id: "product-approval", label: "Duyệt sản phẩm", roles: ["admin"] },
+    { id: "checkout", label: "Thanh toán", roles: ["buyer"] },
+    { id: "b2b-cart", label: "Giỏ hàng B2B", roles: ["business"] },
+    { id: "contact", label: "Liên hệ", roles: ["guest"] },
     {
       id: "listing-management",
       label: "Quản lý bài đăng",
-      roles: ["farmer", "seller", "admin"],
+      roles: ["farmer", "seller"],
     },
     {
       id: "order-management",
       label: "Lịch sử đơn hàng",
-      roles: ["buyer", "business", "farmer", "seller", "admin"],
+      roles: ["buyer", "business", "farmer", "seller"],
     },
     {
       id: "seller-center",
       label: "Seller Center",
-      roles: ["buyer", "business", "farmer", "seller", "admin"],
+      roles: ["farmer", "seller"],
     },
   ];
 
   // Lọc danh sách menu dựa trên prop user động
   const filteredMenu = menuItems.filter((item) => {
-    if (item.roles.includes("all")) return true;
     if (!user) return item.roles.includes("guest");
-    return item.roles.includes(user?.role || "");
+    return item.roles.includes(user?.role?.toLowerCase() || "");
   });
 
   const MAX_VISIBLE_ITEMS = 4;
