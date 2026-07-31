@@ -20,6 +20,7 @@ export const productApi = {
     if (filter.farmId) params.append('farmId', filter.farmId);
     if (filter.minPrice) params.append('minPrice', filter.minPrice);
     if (filter.maxPrice) params.append('maxPrice', filter.maxPrice);
+    if (filter.isWholesale !== undefined && filter.isWholesale !== null) params.append('isWholesale', filter.isWholesale);
     const query = params.toString();
     return apiClient.get(`${ENDPOINTS.PRODUCTS.LIST}${query ? `?${query}` : ''}`);
   },
@@ -78,5 +79,36 @@ export const categoryApi = {
     if (params.pageNumber) query.append('pageNumber', params.pageNumber);
     const queryStr = query.toString();
     return apiClient.get(`${ENDPOINTS.CATEGORIES.LIST}${queryStr ? `?${queryStr}` : ''}`);
+  },
+};
+
+/**
+ * Payment API service (PayOS integration)
+ */
+export const paymentApi = {
+  /**
+   * Tạo link thanh toán PayOS VietQR cho đơn hàng
+   * @param {number} orderId 
+   * @param {number} [amount] - Tổng tiền thanh toán (total) bao gồm phí dịch vụ
+   */
+  createCheckoutUrl: (orderId, amount) => {
+    const endpoint = ENDPOINTS.PAYMENTS.CHECKOUT(orderId);
+    if (amount) {
+      return apiClient.post(`${endpoint}?amount=${Math.round(amount)}`, { amount: Math.round(amount) });
+    }
+    return apiClient.post(endpoint);
+  },
+};
+
+/**
+ * Order API service
+ */
+export const orderApi = {
+  /**
+   * Tạo đơn hàng mới trong Database
+   * @param {Object} dto - { shippingAddress, orderItems: [{ productId, quantity }] }
+   */
+  createOrder: (dto) => {
+    return apiClient.post(ENDPOINTS.ORDERS.CREATE, dto);
   },
 };

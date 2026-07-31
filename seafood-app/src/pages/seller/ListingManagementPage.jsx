@@ -7,6 +7,7 @@ export function ListingManagementPage({ onNavigate }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [wholesaleFilter, setWholesaleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -21,7 +22,7 @@ export function ListingManagementPage({ onNavigate }) {
   });
 
   // Fetch products từ API
-  const fetchListings = async (page = 1, status = 'all') => {
+  const fetchListings = async (page = 1, status = 'all', wholesale = 'all') => {
     setLoading(true);
     try {
       const filter = {
@@ -30,6 +31,11 @@ export function ListingManagementPage({ onNavigate }) {
       };
       if (status !== 'all') {
         filter.status = status;
+      }
+      if (wholesale === 'wholesale') {
+        filter.isWholesale = true;
+      } else if (wholesale === 'retail') {
+        filter.isWholesale = false;
       }
       const data = await productApi.getProducts(filter);
 
@@ -71,14 +77,14 @@ export function ListingManagementPage({ onNavigate }) {
   };
 
   useEffect(() => {
-    fetchListings(1, statusFilter);
+    fetchListings(1, statusFilter, wholesaleFilter);
     fetchStats();
   }, []);
 
   // Khi đổi filter → reset về trang 1
   useEffect(() => {
-    fetchListings(1, statusFilter);
-  }, [statusFilter]);
+    fetchListings(1, statusFilter, wholesaleFilter);
+  }, [statusFilter, wholesaleFilter]);
 
   const getStatusLabel = (status) => {
     const labels = {
@@ -196,6 +202,17 @@ export function ListingManagementPage({ onNavigate }) {
               <option value="out_of_stock">Hết hàng</option>
             </select>
 
+            <select
+              value={wholesaleFilter}
+              onChange={(e) => setWholesaleFilter(e.target.value)}
+              className="px-4 py-2 border rounded-md text-sm outline-none"
+              style={{ borderColor: '#e5e7eb' }}
+            >
+              <option value="all">Tất cả bài đăng</option>
+              <option value="retail">Bán lẻ</option>
+              <option value="wholesale">Bán sỉ / Sản lượng lớn</option>
+            </select>
+
             <div className="ml-auto">
               <button
                 onClick={() => onNavigate('seller-center')}
@@ -298,7 +315,16 @@ export function ListingManagementPage({ onNavigate }) {
                                     <Package className="w-6 h-6 text-gray-300" />
                                   </div>
                                 )}
-                                <span className="font-medium" style={{ color: '#0A2647' }}>{listing.name}</span>
+                                <div className="flex flex-col gap-1">
+                                  <span className="font-medium flex items-center gap-2" style={{ color: '#0A2647' }}>
+                                    {listing.name}
+                                    {listing.isWholesale && (
+                                      <span className="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-100 text-cyan-800 border border-cyan-200">
+                                        Sản lượng lớn
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
@@ -308,7 +334,12 @@ export function ListingManagementPage({ onNavigate }) {
                               {formatPrice(listing.price)}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
-                              {listing.quantity} {listing.unit}
+                              <div>{listing.quantity} {listing.unit}</div>
+                              {(listing.isWholesale || (listing.minOrderQuantity && listing.minOrderQuantity > 1)) && (
+                                <div className="text-xs text-cyan-700 font-medium mt-0.5">
+                                  Tối thiểu: {listing.minOrderQuantity || 1} {listing.unit}
+                                </div>
+                              )}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
@@ -374,7 +405,7 @@ export function ListingManagementPage({ onNavigate }) {
                   </p>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => fetchListings(currentPage - 1, statusFilter)}
+                      onClick={() => fetchListings(currentPage - 1, statusFilter, wholesaleFilter)}
                       disabled={currentPage <= 1}
                       className="p-2 rounded-md border hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       style={{ borderColor: '#e5e7eb' }}
@@ -385,7 +416,7 @@ export function ListingManagementPage({ onNavigate }) {
                       {currentPage} / {totalPages}
                     </span>
                     <button
-                      onClick={() => fetchListings(currentPage + 1, statusFilter)}
+                      onClick={() => fetchListings(currentPage + 1, statusFilter, wholesaleFilter)}
                       disabled={currentPage >= totalPages}
                       className="p-2 rounded-md border hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       style={{ borderColor: '#e5e7eb' }}

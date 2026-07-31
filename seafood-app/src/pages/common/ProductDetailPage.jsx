@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck } from 'lucide-react';
+import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck, ArrowLeft } from 'lucide-react';
 import { ProductCard } from '../../components/ProductCard';
 import { productApi } from '../../api/products';
 
@@ -27,8 +27,11 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
           const mapped = {
             id: String(data.id),
             name: data.name,
+            isWholesale: data.isWholesale || false,
+            minOrderQuantity: data.minOrderQuantity || 1,
+            unit: data.unit || 'kg',
             image: data.imageUrls?.[0] || data.image || data.imageUrl || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
-            price: typeof data.price === 'number' ? `${data.price.toLocaleString('vi-VN')}đ/kg` : data.price,
+            price: typeof data.price === 'number' ? `${data.price.toLocaleString('vi-VN')}đ/${data.unit || 'kg'}` : data.price,
             origin: data.origin || 'Việt Nam',
             rating: data.rating || 5,
             reviews: data.reviews || 0,
@@ -39,6 +42,7 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
             supplier: data.supplier
           };
           setProduct(mapped);
+          setQuantity(mapped.minOrderQuantity || 1);
         } else {
           const found = allProducts.find((item) => String(item.id).trim() === String(productId).trim());
           setProduct(found || allProducts[0] || null);
@@ -134,7 +138,30 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Navigation / Breadcrumb Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => onNavigate('home')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 font-medium rounded-lg shadow-sm border border-gray-200 transition-all duration-200 group cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-gray-500 group-hover:-translate-x-1 transition-transform duration-200" />
+            <span>Quay lại trang chủ</span>
+          </button>
+
+          <nav className="hidden sm:flex items-center gap-2 text-sm text-gray-500">
+            <button onClick={() => onNavigate('home')} className="hover:text-[#00BCD4] transition-colors">
+              Trang chủ
+            </button>
+            <span>/</span>
+            <button onClick={() => onNavigate('retail')} className="hover:text-[#00BCD4] transition-colors">
+              Hải sản
+            </button>
+            <span>/</span>
+            <span className="text-gray-900 font-medium truncate max-w-[200px]">{product.name}</span>
+          </nav>
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Image Gallery */}
@@ -163,7 +190,14 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
 
             {/* Product Info */}
             <div>
-              <h1 className="text-2xl font-bold mb-4" style={{ color: '#0A2647' }}>{product.name}</h1>
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <h1 className="text-2xl font-bold" style={{ color: '#0A2647' }}>{product.name}</h1>
+                {product.isWholesale && (
+                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-cyan-100 text-cyan-800 border border-cyan-300">
+                    Bán sản lượng lớn (Sỉ)
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center gap-4 mb-4 pb-4 border-b" style={{ borderColor: '#e5e7eb' }}>
                 <div className="flex items-center gap-1">
@@ -184,14 +218,14 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
               <div className="bg-gray-50 p-4 rounded-lg mb-6">
                 <div className="flex items-baseline gap-3 mb-2">
                   <span className="text-3xl font-bold" style={{ color: '#d4183d' }}>
-                    {String(product.price || '').includes('/kg') ? product.price : `${product.price}/kg`}
+                    {String(product.price || '').includes('/') ? product.price : `${product.price}/${product.unit || 'kg'}`}
                   </span>
                   {product.originalPrice && (
                     <span className="text-lg text-gray-400 line-through">{product.originalPrice}</span>
                   )}
                   <span className="px-2 py-1 bg-red-100 text-red-600 text-sm rounded">-18%</span>
                 </div>
-                <p className="text-sm text-gray-600">Giá theo đơn vị niêm yết</p>
+                <p className="text-sm text-gray-600">Giá theo đơn vị niêm yết ({product.unit || 'kg'})</p>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -213,11 +247,13 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm mb-2 font-medium" style={{ color: '#0A2647' }}>Số lượng mua</label>
+                <label className="block text-sm mb-2 font-medium" style={{ color: '#0A2647' }}>
+                  Số lượng mua {product.minOrderQuantity > 1 && <span className="text-xs font-normal text-cyan-700">(Tối thiểu {product.minOrderQuantity} {product.unit || 'kg'})</span>}
+                </label>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border rounded-md" style={{ borderColor: '#e5e7eb' }}>
                     <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      onClick={() => setQuantity(Math.max(product.minOrderQuantity || 1, quantity - 1))}
                       className="p-2 hover:bg-gray-50 text-gray-600"
                     >
                       <Minus className="w-4 h-4" />
@@ -225,8 +261,8 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
                     <input
                       type="number"
                       value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 text-center border-x py-1 outline-none font-medium"
+                      onChange={(e) => setQuantity(Math.max(product.minOrderQuantity || 1, parseInt(e.target.value) || (product.minOrderQuantity || 1)))}
+                      className="w-20 text-center border-x py-1 outline-none font-medium"
                       style={{ borderColor: '#e5e7eb' }}
                     />
                     <button

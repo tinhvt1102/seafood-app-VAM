@@ -14,6 +14,7 @@ export function SellerCenterPage({ onNavigate }) {
     seafoodType: '',
     size: '',
     quantity: '',
+    minOrderQuantity: '',
     harvestDate: '',
     proposedPrice: '',
     location: '',
@@ -22,9 +23,10 @@ export function SellerCenterPage({ onNavigate }) {
     imagePreviews: [], // URL.createObjectURL for preview
     description: '',
     categoryId: '',
+    isWholesale: true, // Đăng sản lượng mặc định là bán sỉ/sản lượng lớn
   });
 
-  // Product form state — maps to CreateProductDto fields
+  // Product form state — maps to CreateProductDto fields (Mặc định là bán lẻ)
   const [productForm, setProductForm] = useState({
     productName: '',
     categoryId: '',
@@ -112,6 +114,8 @@ export function SellerCenterPage({ onNavigate }) {
         formData.append('Price', supplyForm.proposedPrice);
         formData.append('Quantity', supplyForm.quantity);
         formData.append('Unit', 'kg');
+        formData.append('IsWholesale', 'true');
+        formData.append('MinOrderQuantity', supplyForm.minOrderQuantity || '1');
 
         // Gộp thông tin chi tiết vào Description
         const certText = supplyForm.certifications.length > 0
@@ -131,12 +135,14 @@ export function SellerCenterPage({ onNavigate }) {
           formData.append('Images', file);
         });
       } else {
-        // Map product form → CreateProductDto fields
+        // Map product form → CreateProductDto fields (Mặc định bán lẻ, mua tối thiểu 1)
         formData.append('Name', productForm.productName);
         formData.append('CategoryId', productForm.categoryId);
         formData.append('Price', productForm.price);
         formData.append('Quantity', productForm.stock);
         formData.append('Unit', productForm.unit);
+        formData.append('IsWholesale', 'false');
+        formData.append('MinOrderQuantity', '1');
         formData.append('Description', productForm.description);
 
         // Đính kèm file ảnh
@@ -156,9 +162,9 @@ export function SellerCenterPage({ onNavigate }) {
         // Revoke preview URLs to free memory
         supplyForm.imagePreviews.forEach(url => URL.revokeObjectURL(url));
         setSupplyForm({
-          seafoodType: '', size: '', quantity: '', harvestDate: '',
+          seafoodType: '', size: '', quantity: '', minOrderQuantity: '', harvestDate: '',
           proposedPrice: '', location: '', certifications: [],
-          images: [], imagePreviews: [], description: '', categoryId: '',
+          images: [], imagePreviews: [], description: '', categoryId: '', isWholesale: true,
         });
       } else {
         productForm.imagePreviews.forEach(url => URL.revokeObjectURL(url));
@@ -241,7 +247,15 @@ export function SellerCenterPage({ onNavigate }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 1000,
+          success: { duration: 1000 },
+          error: { duration: 1000 },
+        }}
+      />
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
@@ -425,7 +439,7 @@ export function SellerCenterPage({ onNavigate }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
                       Size <span className="text-red-500">*</span>
@@ -442,13 +456,27 @@ export function SellerCenterPage({ onNavigate }) {
 
                   <div>
                     <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
-                      Sản lượng (kg) <span className="text-red-500">*</span>
+                      Tổng sản lượng (kg) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={supplyForm.quantity}
                       onChange={(e) => setSupplyForm({ ...supplyForm, quantity: e.target.value })}
-                      placeholder="Nhập sản lượng"
+                      placeholder="VD: 5000"
+                      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
+                      style={{ borderColor: '#e5e7eb' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                      Mua tối thiểu (kg)
+                    </label>
+                    <input
+                      type="number"
+                      value={supplyForm.minOrderQuantity}
+                      onChange={(e) => setSupplyForm({ ...supplyForm, minOrderQuantity: e.target.value })}
+                      placeholder="Mặc định: 1 kg"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
                       style={{ borderColor: '#e5e7eb' }}
                     />

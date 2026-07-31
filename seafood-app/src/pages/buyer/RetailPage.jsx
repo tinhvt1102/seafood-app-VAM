@@ -40,9 +40,12 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
     });
   }, [allProducts]);
 
-  // LOGIC LỌC SẢN PHẨM: Đã được cập nhật để kiểm tra trên kho dữ liệu động processedProducts
+  // LOGIC LỌC SẢN PHẨM: Chỉ lấy sản phẩm bán lẻ (isWholesale = false)
   const filteredProducts = useMemo(() => {
     return processedProducts.filter(product => {
+      // 0. Lọc bỏ hàng sản lượng / bán sỉ (isWholesale = true)
+      if (product.isWholesale || product.isWholeSale) return false;
+
       // 1. Lọc theo danh mục (nhiều lựa chọn cùng lúc)
       if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) return false;
 

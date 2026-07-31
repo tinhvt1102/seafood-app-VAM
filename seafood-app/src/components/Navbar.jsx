@@ -16,14 +16,14 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
     {
       id: "supply",
       label: "Sản lượng",
-      roles: ["business"],
+      roles: ["business", "buyer", "farmer", "seller", "guest", "admin"],
     },
     {
       id: "suppliers",
       label: "Tìm nguồn hải sản",
-      roles: ["business"],
+      roles: ["business", "buyer", "farmer", "seller", "guest", "admin"],
     },
-    { id: "retail", label: "Mua lẻ", roles: ["buyer", "guest"] },
+    { id: "retail", label: "Mua lẻ", roles: ["buyer", "guest", "farmer", "seller", "business", "admin"] },
     { id: "dashboard", label: "Quản lý", roles: ["farmer", "seller"] },
     { id: "admin-dashboard", label: "Admin Dashboard", roles: ["admin"] },
     { id: "admin-orders", label: "Quản lý đơn hàng", roles: ["admin"] },

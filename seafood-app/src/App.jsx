@@ -21,8 +21,11 @@ import { SellerCenterPage } from './pages/seller/SellerCenterPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { ProductApprovalPage } from './pages/admin/ProductApprovalPage';
 import { AdminOrderManagementPage } from './pages/admin/AdminOrderManagementPage';
+import { PaymentSuccessPage } from './pages/buyer/PaymentSuccessPage';
+import { PaymentFailPage } from './pages/buyer/PaymentFailPage';
 import { productApi } from './api/products';
 import { toast, Toaster } from 'react-hot-toast';
+import { getStoredCart, saveStoredCart } from './utils/cartStorage';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -30,7 +33,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState(() => {
-    return JSON.parse(localStorage.getItem('cart')) || [];
+    const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    return getStoredCart(savedUser ? (savedUser.id || savedUser.email) : null);
   });
 
   // Tải danh sách sản phẩm từ API
@@ -48,7 +52,8 @@ export default function App() {
             origin: item.origin || 'Việt Nam',
             rating: item.rating || 5,
             reviews: item.reviews || 0,
-            description: item.description || ''
+            description: item.description || '',
+            isWholesale: Boolean(item.isWholesale || item.isWholeSale)
           }));
           setProducts(mapped);
         }
@@ -59,7 +64,7 @@ export default function App() {
     fetchApprovedProducts();
   }, []);
 
-  // 1. Tải thông tin User và Giỏ hàng từ LocalStorage khi vào ứng dụng
+  // 1. Tải thông tin User từ LocalStorage khi vào ứng dụng
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -67,21 +72,17 @@ export default function App() {
     }
   }, []);
 
+  // 2. Tải giỏ hàng khi user thay đổi (đọc từ LocalStorage + Cookie Fallback)
   useEffect(() => {
-    const cartKey = user ? `cart_${user.id || user.email}` : 'cart_guest';
-    const savedCart = localStorage.getItem(cartKey);
+    const userId = user ? (user.id || user.email) : null;
+    const cart = getStoredCart(userId);
+    setCartItems(cart);
+  }, [user]);
 
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
-    } else {
-      setCartItems([]); // Nếu tài khoản này chưa từng mua gì thì set giỏ hàng rỗng
-    }
-  }, [user]); // Bắt buộc phải đưa [user] vào đây để mỗi lần đổi acc là nó tự reload lại giỏ hàng tương ứng
-
-  // 3. Tự động đồng bộ Giỏ hàng vào LocalStorage mỗi khi giỏ hàng HOẶC user thay đổi
+  // 3. Tự động đồng bộ Giỏ hàng vào LocalStorage và Cookie mỗi khi giỏ hàng HOẶC user thay đổi
   useEffect(() => {
-    const cartKey = user ? `cart_${user.id || user.email}` : 'cart_guest';
-    localStorage.setItem(cartKey, JSON.stringify(cartItems));
+    const userId = user ? (user.id || user.email) : null;
+    saveStoredCart(cartItems, userId);
   }, [cartItems, user]);
 
   // 3. Hàm thêm vào giỏ hàng thông minh (Đã sửa lỗi biến addQty bằng quantity động)
@@ -160,32 +161,79 @@ export default function App() {
     setUser(updatedUser);
   };
 
-  // 5. Điều hướng trang
-  const handleNavigate = (page, id) => {
+  // 5. Điều hướng trang và đồng bộ Browser History (HTML5 History API)
+  const handleNavigate = (page, id, isPopState = false) => {
     setCurrentPage(page);
     setPageData({ id });
     window.scrollTo(0, 0);
+
+    if (!isPopState) {
+      const stateObj = { page, id };
+      const url = id ? `?page=${page}&id=${id}` : `?page=${page}`;
+      window.history.pushState(stateObj, '', url);
+    }
   };
+
+  // Khởi tạo state từ URL khi load trang và lắng nghe sự kiện bấm Nút Back / Forward của trình duyệt
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const state = event.state;
+      if (state && state.page) {
+        handleNavigate(state.page, state.id, true);
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        const pageFromUrl = params.get('page') || 'home';
+        const idFromUrl = params.get('id') || null;
+        handleNavigate(pageFromUrl, idFromUrl, true);
+      }
+    };
+
+    // Khi khởi chạy app lần đầu, thiết lập state ban đầu từ URL
+    const params = new URLSearchParams(window.location.search);
+    let initialPage = params.get('page');
+    const initialId = params.get('id') || params.get('orderCode') || null;
+
+    // Tự động nhận diện kết quả thanh toán từ PayOS redirect URL
+    if (params.get('cancel') === 'true' || params.get('status') === 'CANCELLED') {
+      initialPage = 'payment-fail';
+    } else if (params.get('status') === 'PAID' || (params.get('code') === '00' && initialPage !== 'payment-fail')) {
+      initialPage = 'payment-success';
+    } else if (!initialPage) {
+      initialPage = 'home';
+    }
+
+    if (initialPage !== 'home' || initialId) {
+      setCurrentPage(initialPage);
+      setPageData({ id: initialId });
+    }
+
+    if (!window.history.state) {
+      window.history.replaceState({ page: initialPage, id: initialId }, '', window.location.search || './');
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // 6. Hệ thống phân quyền truy cập trang (Role-based Authentication)
   const canAccess = (page) => {
-    if (page === 'product-detail') return true;
+    if (['home', 'retail', 'supply', 'product-detail', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page)) return true;
     if (user && page === 'profile') return true;
     if (!user) {
-      return ['home', 'login', 'contact', 'retail', 'product-detail', 'cart', 'checkout'].includes(page);
+      return ['home', 'login', 'contact', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'payment-success', 'payment-fail'].includes(page);
     }
     const role = user.role?.toLowerCase();
     if (role === 'admin') return true;
     switch (role) {
       case 'buyer':
-        return ['home', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'contact', 'order-management'].includes(page);
+        return ['home', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'contact', 'order-management', 'payment-success', 'payment-fail'].includes(page);
       case 'farmer':
       case 'seller':
-        return ['home', 'supply', 'dashboard', 'seller-center', 'listing-management', 'order-management', 'contact'].includes(page);
+        return ['home', 'retail', 'supply', 'dashboard', 'seller-center', 'listing-management', 'order-management', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
       case 'business':
-        return ['home', 'supply', 'suppliers', 'contact', 'farm-profile', 'b2b-cart', 'order-management'].includes(page);
+        return ['home', 'retail', 'supply', 'suppliers', 'contact', 'farm-profile', 'b2b-cart', 'order-management', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
       default:
-        return ['home', 'contact'].includes(page);
+        return ['home', 'retail', 'supply', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
     }
   };
 
@@ -234,6 +282,10 @@ export default function App() {
           />
         );
       }
+      case 'payment-success':
+        return <PaymentSuccessPage orderId={pageData.id} onNavigate={handleNavigate} />;
+      case 'payment-fail':
+        return <PaymentFailPage orderId={pageData.id} onNavigate={handleNavigate} />;
       case 'dashboard':
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
       case 'login':
@@ -266,7 +318,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 1000,
+          success: { duration: 1000 },
+          error: { duration: 1000 },
+        }}
+      />
 
       {user && user.status === 'pending' && (
         <RoleSelectionOverlay user={user} onStatusUpdated={handleStatusUpdated} />

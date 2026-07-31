@@ -55,6 +55,11 @@ export const ENDPOINTS = {
     PENDING_BUSINESSES: '/admin/AdminProfiles/business/pending',
     APPROVE_SELLER: (id) => `/admin/AdminProfiles/seller/${id}/approve`,
     APPROVE_BUSINESS: (id) => `/admin/AdminProfiles/business/${id}/approve`,
+  },
+  PAYMENTS: {
+    CHECKOUT: (orderId) => `/Payments/checkout/${orderId}`,
+    CREATE: '/Payments',
+    GET_BY_ID: (id) => `/Payments/${id}`,
   }
 };
 

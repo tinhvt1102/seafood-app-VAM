@@ -71,6 +71,7 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
           origin: item.origin || 'Việt Nam',
           rating: item.rating || 5,
           reviews: item.reviews || 0,
+          isWholesale: Boolean(item.isWholesale || item.isWholeSale),
           description: item.description || ''
         }));
         setApiProducts(mapped);
@@ -84,28 +85,46 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
     fetchProducts();
   }, [passedProducts]);
 
-  // Tạo dữ liệu B2B/Sản lượng động từ sản phẩm thực tế
-  const displaySupply = useMemo(() => {
-    return apiProducts.map((item, idx) => ({
-      id: item.id || `supply-${idx}`,
-      species: item.name,
-      image: item.image,
-      size: 'Size tiêu chuẩn',
-      harvestTime: 'Tươi sống mỗi ngày',
-      quantity: 'Số lượng lớn',
-      location: item.origin,
-      farmerName: 'Hộ nuôi liên kết VAM'
-    }));
-  }, [apiProducts]);
+  // Tải danh sách sản lượng (isWholesale = true) từ API cho phần Sản lượng nổi bật
+  const [supplyProducts, setSupplyProducts] = useState([]);
 
-  const filteredSupply = displaySupply.filter(item =>
+  useEffect(() => {
+    const fetchWholesaleProducts = async () => {
+      try {
+        const res = await productApi.getProducts({
+          isWholesale: true,
+          status: 'approved',
+          pageSize: 20
+        });
+        const items = res?.items || res || [];
+        const mapped = items.map((item) => ({
+          id: String(item.id),
+          species: item.name,
+          image: item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
+          size: 'Tuyển chọn chất lượng cao',
+          harvestTime: 'Tươi sống mỗi ngày',
+          quantity: `${item.quantity.toLocaleString('vi-VN')} ${item.unit || 'kg'}`,
+          location: item.farmName || 'Việt Nam',
+          farmerName: item.sellerName || 'Hộ nuôi thủy sản'
+        }));
+        setSupplyProducts(mapped);
+      } catch (err) {
+        console.error('Lỗi khi tải sản lượng nổi bật:', err);
+      }
+    };
+    fetchWholesaleProducts();
+  }, []);
+
+  const filteredSupply = supplyProducts.filter(item =>
     item.species.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredRetail = apiProducts.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.origin.toLowerCase().includes(searchTerm.toLowerCase())
+    !item.isWholesale &&
+    !item.isWholeSale &&
+    (item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     item.origin.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -201,7 +220,7 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredSupply.length > 0 ? (
             filteredSupply.map((supply) => (
-              <SupplyCard key={supply.id} {...supply} onClick={() => onNavigate('supply')} />
+              <SupplyCard key={supply.id} {...supply} onClick={() => onNavigate('product-detail', supply.id)} />
             ))
           ) : (
             <p className="col-span-full text-center py-10 text-gray-400 italic">Không tìm thấy sản lượng phù hợp.</p>
