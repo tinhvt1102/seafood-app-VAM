@@ -16,19 +16,18 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
     {
       id: "supply",
       label: "Sản lượng",
-      roles: ["business", "buyer", "farmer", "seller", "guest", "admin"],
+      roles: ["business", "buyer", "customer", "farmer", "seller", "guest", "admin"],
     },
     {
       id: "suppliers",
       label: "Tìm nguồn hải sản",
-      roles: ["business", "buyer", "farmer", "seller", "guest", "admin"],
+      roles: ["business", "buyer", "customer", "farmer", "seller", "guest", "admin"],
     },
-    { id: "retail", label: "Mua lẻ", roles: ["buyer", "guest", "farmer", "seller", "business", "admin"] },
+    { id: "retail", label: "Mua lẻ", roles: ["buyer", "customer", "guest", "farmer", "seller", "business", "admin"] },
     { id: "dashboard", label: "Quản lý", roles: ["farmer", "seller"] },
     { id: "admin-dashboard", label: "Admin Dashboard", roles: ["admin"] },
     { id: "admin-orders", label: "Quản lý đơn hàng", roles: ["admin"] },
     { id: "product-approval", label: "Duyệt sản phẩm", roles: ["admin"] },
-    { id: "checkout", label: "Thanh toán", roles: ["buyer"] },
     { id: "b2b-cart", label: "Giỏ hàng B2B", roles: ["business"] },
     { id: "contact", label: "Liên hệ", roles: ["guest"] },
     {
@@ -39,7 +38,7 @@ export function Navbar({ currentPage, onNavigate, cartCount, user }) {
     {
       id: "order-management",
       label: "Lịch sử đơn hàng",
-      roles: ["buyer", "business", "farmer", "seller"],
+      roles: ["buyer", "customer", "business"],
     },
     {
       id: "seller-center",

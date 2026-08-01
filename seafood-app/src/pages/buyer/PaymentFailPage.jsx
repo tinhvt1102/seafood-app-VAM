@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { XCircle, AlertTriangle, RotateCcw, ShoppingBag, HelpCircle, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { orderApi } from '../../api/products';
 
 export function PaymentFailPage({ orderId, onNavigate }) {
   const [reason, setReason] = useState('Giao dịch chưa được hoàn tất hoặc đã bị hủy bởi người dùng.');
@@ -7,14 +8,27 @@ export function PaymentFailPage({ orderId, onNavigate }) {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('orderCode') || params.get('id') || orderId || 'VAM-' + Math.floor(100000 + Math.random() * 900000);
+    const targetOrderId = params.get('orderId') || orderId;
+    const orderCode = params.get('orderCode') || targetOrderId;
     const isCancel = params.get('cancel') === 'true' || params.get('status') === 'CANCELLED';
     
-    setDisplayCode(code);
+    setDisplayCode(orderCode || targetOrderId || 'VAM-' + Math.floor(100000 + Math.random() * 900000));
+
     if (isCancel) {
       setReason('Bạn đã chủ động hủy giao dịch trên cổng thanh toán.');
     } else {
       setReason('Hệ thống thanh toán không nhận được phản hồi xác thực hoặc quá thời gian xử lý.');
+    }
+
+    // Tự động gửi API cập nhật trạng thái đơn sang 'cancelled' nếu phát hiện targetOrderId
+    if (targetOrderId && !isNaN(Number(targetOrderId))) {
+      orderApi.updateOrderStatus(Number(targetOrderId), 'cancelled')
+        .then(() => {
+          console.log(`Đã tự động hủy thành công đơn hàng #${targetOrderId} trên backend`);
+        })
+        .catch(err => {
+          console.warn(`Lỗi khi tự động hủy đơn #${targetOrderId}:`, err);
+        });
     }
   }, [orderId]);
 

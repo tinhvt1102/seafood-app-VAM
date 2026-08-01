@@ -111,4 +111,56 @@ export const orderApi = {
   createOrder: (dto) => {
     return apiClient.post(ENDPOINTS.ORDERS.CREATE, dto);
   },
+
+  /**
+   * Lấy danh sách đơn hàng của người mua hiện tại
+   * @param {Object} params - { pageNumber, pageSize }
+   */
+  getMyOrders: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.pageNumber) query.append('pageNumber', params.pageNumber);
+    if (params.pageSize) query.append('pageSize', params.pageSize);
+    const queryStr = query.toString();
+    return apiClient.get(`${ENDPOINTS.ORDERS.MY_ORDERS}${queryStr ? `?${queryStr}` : ''}`);
+  },
+
+  /**
+   * Lấy danh sách đơn hàng cho Seller
+   * @param {Object} params - { pageNumber, pageSize }
+   */
+  getSellerOrders: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.pageNumber) query.append('pageNumber', params.pageNumber);
+    if (params.pageSize) query.append('pageSize', params.pageSize);
+    const queryStr = query.toString();
+    return apiClient.get(`${ENDPOINTS.ORDERS.SELLER_ORDERS}${queryStr ? `?${queryStr}` : ''}`);
+  },
+
+  /**
+   * Cập nhật trạng thái đơn hàng (Seller/Buyer)
+   * @param {number} orderId 
+   * @param {string} status - 'confirmed', 'shipping', 'completed', 'cancelled'
+   */
+  updateOrderStatus: (orderId, status) => {
+    return apiClient.put(ENDPOINTS.ORDERS.UPDATE_STATUS(orderId), { status });
+  },
 };
+
+/**
+ * Farm / Supplier API service
+ */
+export const farmApi = {
+  getFarms: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.pageNumber) query.append('pageNumber', params.pageNumber);
+    if (params.pageSize) query.append('pageSize', params.pageSize);
+    if (params.search) query.append('search', params.search);
+    const queryStr = query.toString();
+    return apiClient.get(`${ENDPOINTS.FARMS.LIST}${queryStr ? `?${queryStr}` : ''}`);
+  },
+
+  getFarmById: (id) => {
+    return apiClient.get(ENDPOINTS.FARMS.DETAIL(id));
+  },
+};
+

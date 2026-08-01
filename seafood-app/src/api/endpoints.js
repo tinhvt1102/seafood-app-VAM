@@ -24,6 +24,10 @@ export const ENDPOINTS = {
   CATEGORIES: {
     LIST: '/Categorys',
   },
+  FARMS: {
+    LIST: '/Farms',
+    DETAIL: (id) => `/Farms/${id}`,
+  },
   SUPPLIERS: {
     LIST: '/suppliers',
     DETAIL: (id) => `/suppliers/${id}`,
@@ -49,6 +53,8 @@ export const ENDPOINTS = {
     CREATE_BUSINESS: '/Profiles/business',
     MY_SELLER: '/Profiles/seller/me',
     MY_BUSINESS: '/Profiles/business/me',
+    APPROVED_SELLERS: '/Profiles/sellers',
+    SELLER_DETAIL: (id) => `/Profiles/sellers/${id}`,
   },
   ADMIN_PROFILES: {
     PENDING_SELLERS: '/admin/AdminProfiles/seller/pending',

@@ -242,12 +242,14 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
                 {...product}
                 onClick={() => onNavigate('product-detail', product.id)}
                 onAddToCart={() => {
-                  const rawPrice = String(product.price || '0');
-                  const cleanPrice = Number(rawPrice.replace(/[^0-9]/g, ''));
-                  onAddToCart({
-                    ...product,
-                    price: cleanPrice 
-                  });
+                  if (onAddToCart) {
+                    const rawPrice = String(product.price || '0');
+                    const cleanPrice = Number(rawPrice.replace(/[^0-9]/g, ''));
+                    onAddToCart({
+                      ...product,
+                      price: cleanPrice 
+                    });
+                  }
                 }}
               />
             ))

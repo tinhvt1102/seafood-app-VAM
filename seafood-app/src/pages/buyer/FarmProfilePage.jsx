@@ -1,218 +1,130 @@
-import { Star, MapPin, BadgeCheck, Phone, Mail } from 'lucide-react';
-import { SupplyCard } from '../../components/SupplyCard';
+import { useState, useEffect } from 'react';
+import { Star, MapPin, BadgeCheck, Phone, Mail, Loader2, Package } from 'lucide-react';
+import { ProductCard } from '../../components/ProductCard';
+import { authApi } from '../../api/auth';
+import toast from 'react-hot-toast';
 
+export function FarmProfilePage({ farmId, onNavigate, onAddToCart }) {
+  const [farmData, setFarmData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export function FarmProfilePage({ farmId }) {
-  const farms = [
-  {
-    id: '1',
-    name: 'Hộ nuôi Hải Sản Phát Đạt',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'Huyện Thới Bình, Cà Mau',
-    rating: 5,
-    reviews: 128,
-    verified: true,
-    certifications: ['VietGAP', 'GlobalGAP', 'ISO 22000'],
-    description: 'Hộ nuôi Hải Sản Phát Đạt là một trong những cơ sở nuôi tôm hàng đầu tại Cà Mau với hơn 15 năm kinh nghiệm. Cơ sở chuyên cung cấp tôm sú và tôm thẻ chất lượng cao.',
-    phone: '0901 234 567',
-    email: 'phatdat@seafood.vn',
-    established: '2010',
-    supplies: [
-      {
-        id: '1',
-        species: 'Tôm sú size 20-25',
-        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '20-25 con/kg',
-        harvestTime: '15/03/2026',
-        quantity: '5 tấn',
-        location: 'Cà Mau',
-        farmerName: 'Hộ nuôi Phát Đạt'
-      },
-      {
-        id: '2',
-        species: 'Tôm thẻ size 60-70',
-        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '60-70 con/kg',
-        harvestTime: '10/03/2026',
-        quantity: '3 tấn',
-        location: 'Cà Mau',
-        farmerName: 'Hộ nuôi Phát Đạt'
+  useEffect(() => {
+    const fetchSellerDetail = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const cleanId = String(farmId || '').replace('profile-', '').replace('farm-', '');
+        if (!cleanId) {
+          setError('Không tìm thấy mã hộ nuôi / trang trại');
+          return;
+        }
+
+        const data = await authApi.getSellerDetail(cleanId);
+        setFarmData(data);
+      } catch (err) {
+        console.error('Failed to fetch seller detail:', err);
+        setError('Không thể tải thông tin trang trại');
+      } finally {
+        setLoading(false);
       }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Hộ nuôi Thủy Sản Miền Tây',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'An Giang',
-    rating: 5,
-    reviews: 95,
-    verified: true,
-    certifications: ['VietGAP', 'ASC'],
-    description: 'Hộ nuôi Thủy Sản Miền Tây chuyên cung cấp cá tra và cá basa từ vùng nuôi An Giang. Sản phẩm phù hợp cho chế biến thực phẩm và xuất khẩu.',
-    phone: '0902 345 678',
-    email: 'mientay@seafood.vn',
-    established: '2012',
-    supplies: [
-      {
-        id: '3',
-        species: 'Cá Tra',
-        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '0.8-1.2 kg/con',
-        harvestTime: '20/03/2026',
-        quantity: '10 tấn',
-        location: 'An Giang',
-        farmerName: 'Hộ nuôi Miền Tây'
-      },
-      {
-        id: '4',
-        species: 'Cá Basa',
-        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '1.0-1.5 kg/con',
-        harvestTime: '22/03/2026',
-        quantity: '15 tấn',
-        location: 'An Giang',
-        farmerName: 'Hộ nuôi Miền Tây'
-      }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Hộ nuôi Hải Phong',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'Bạc Liêu',
-    rating: 4,
-    reviews: 67,
-    verified: false,
-    certifications: ['VietGAP'],
-    description: 'Hộ nuôi Hải Phong là cơ sở nuôi tôm thẻ tại Bạc Liêu, tập trung vào nguồn hàng ổn định và chất lượng cho thị trường nội địa.',
-    phone: '0903 456 789',
-    email: 'haiphong@seafood.vn',
-    established: '2015',
-    supplies: [
-      {
-        id: '5',
-        species: 'Tôm thẻ chân trắng',
-        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '60-70 con/kg',
-        harvestTime: '10/03/2026',
-        quantity: '3 tấn',
-        location: 'Bạc Liêu',
-        farmerName: 'Hộ nuôi Hải Phong'
-      }
-    ]
-  },
-  {
-    id: '4',
-    name: 'Hộ nuôi Hải Sản Vạn Phát',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'Sóc Trăng',
-    rating: 5,
-    reviews: 143,
-    verified: true,
-    certifications: ['VietGAP', 'GlobalGAP', 'ASC'],
-    description: 'Hộ nuôi Hải Sản Vạn Phát chuyên cung cấp tôm sú tại Sóc Trăng với sản lượng lớn, phù hợp cho nhà hàng, đại lý và doanh nghiệp thu mua.',
-    phone: '0904 567 890',
-    email: 'vanphat@seafood.vn',
-    established: '2009',
-    supplies: [
-      {
-        id: '6',
-        species: 'Tôm sú xuất khẩu',
-        image: 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '15-20 con/kg',
-        harvestTime: '18/03/2026',
-        quantity: '8 tấn',
-        location: 'Sóc Trăng',
-        farmerName: 'Hộ nuôi Vạn Phát'
-      }
-    ]
-  },
-  {
-    id: '5',
-    name: 'Hộ nuôi Thủy Sản Đồng Bằng',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'Đồng Tháp',
-    rating: 4,
-    reviews: 82,
-    verified: true,
-    certifications: ['VietGAP'],
-    description: 'Hộ nuôi Thủy Sản Đồng Bằng cung cấp cá tra và cá basa từ Đồng Tháp, có sản lượng ổn định theo tháng.',
-    phone: '0905 678 901',
-    email: 'dongbang@seafood.vn',
-    established: '2014',
-    supplies: [
-      {
-        id: '7',
-        species: 'Cá Tra',
-        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '0.8-1.2 kg/con',
-        harvestTime: '24/03/2026',
-        quantity: '12 tấn',
-        location: 'Đồng Tháp',
-        farmerName: 'Hộ nuôi Đồng Bằng'
-      },
-      {
-        id: '8',
-        species: 'Cá Basa',
-        image: 'https://images.unsplash.com/photo-1674066620888-4878aad91094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '1.0-1.5 kg/con',
-        harvestTime: '26/03/2026',
-        quantity: '15 tấn',
-        location: 'Đồng Tháp',
-        farmerName: 'Hộ nuôi Đồng Bằng'
-      }
-    ]
-  },
-  {
-    id: '6',
-    name: 'Hộ nuôi Hải Sản Nam Bộ',
-    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-    location: 'Kiên Giang',
-    rating: 5,
-    reviews: 76,
-    verified: true,
-    certifications: ['VietGAP', 'GlobalGAP'],
-    description: 'Hộ nuôi Hải Sản Nam Bộ chuyên cung cấp cua và ghẹ tươi sống tại Kiên Giang, nguồn hàng phù hợp cho nhà hàng và chợ đầu mối.',
-    phone: '0906 789 012',
-    email: 'nambo@seafood.vn',
-    established: '2011',
-    supplies: [
-      {
-        id: '9',
-        species: 'Cua biển',
-        image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '300-400g/con',
-        harvestTime: '12/03/2026',
-        quantity: '2 tấn',
-        location: 'Kiên Giang',
-        farmerName: 'Hộ nuôi Nam Bộ'
-      },
-      {
-        id: '10',
-        species: 'Ghẹ xanh',
-        image: 'https://images.unsplash.com/photo-1609834272245-8ca8337f81f7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
-        size: '4-6 con/kg',
-        harvestTime: '16/03/2026',
-        quantity: '3 tấn',
-        location: 'Kiên Giang',
-        farmerName: 'Hộ nuôi Nam Bộ'
-      }
-    ]
+    };
+
+    fetchSellerDetail();
+  }, [farmId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gray-50">
+        <Loader2 className="w-10 h-10 animate-spin text-[#00BCD4] mb-3" />
+        <p className="text-gray-500 text-sm font-medium">Đang tải thông tin trang trại...</p>
+      </div>
+    );
   }
-];
 
-const farm = farms.find((item) => item.id === farmId) || farms[0];
+  if (error || !farmData) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
+          <Package className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-bold text-[#0A2647] mb-1">{error || 'Trang trại không tồn tại'}</h3>
+        <p className="text-sm text-gray-500 max-w-md mb-6">
+          Rất tiếc, thông tin trang trại này không khả dụng hoặc đã bị gỡ khỏi hệ thống VAM Marketplace.
+        </p>
+      </div>
+    );
+  }
 
-const supplies = farm.supplies;
+  const sellerInfo = farmData.sellerInfo || {};
+  const products = farmData.products || [];
+
+  const farm = {
+    name: farmData.farmName || `Hộ nuôi ${sellerInfo.name || ''}`,
+    coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
+    location: farmData.farmAddress || sellerInfo.address || 'Việt Nam',
+    rating: 5,
+    reviews: products.length > 0 ? products.length * 4 : 12,
+    verified: farmData.status === 'APPROVED' || farmData.status === 'approved',
+    certifications: farmData.certificate ? [farmData.certificate.endsWith('.pdf') ? 'Giấy chứng nhận (PDF)' : farmData.certificate] : ['VietGAP'],
+    description: farmData.note || `Trang trại chuyên nuôi trồng các loại hải sản chất lượng cao (${farmData.aquacultureType || 'Hải sản tươi sống'}).`,
+    phone: sellerInfo.phone || 'Chưa cập nhật',
+    email: sellerInfo.email || 'Chưa cập nhật',
+    aquacultureType: farmData.aquacultureType || 'Tươi sống',
+    verifiedAt: farmData.verifiedAt ? new Date(farmData.verifiedAt).toLocaleDateString('vi-VN') : '2026'
+  };
+
+  const parseImg = (prod) => {
+    const raw = prod.imageUrls?.[0] || prod.image || prod.imageUrl;
+    if (!raw) return 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080';
+    if (typeof raw === 'string' && raw.startsWith('[') && raw.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed[0]) return parsed[0];
+      } catch (e) {}
+    }
+    return raw;
+  };
+
+  const mappedProducts = products.map((prod) => {
+    const numericPrice = typeof prod.price === 'number'
+      ? prod.price
+      : parseInt(String(prod.price || 0).replace(/\D/g, ''), 10) || 0;
+
+    const formattedPrice = numericPrice > 0 
+      ? `${numericPrice.toLocaleString('vi-VN')}đ/${prod.unit || 'kg'}`
+      : `${prod.quantity || 1} ${prod.unit || 'kg'}`;
+
+    return {
+      id: String(prod.id),
+      rawProduct: {
+        id: String(prod.id),
+        name: prod.name,
+        price: numericPrice || 100000,
+        image: parseImg(prod),
+        origin: prod.origin || farm.location,
+        unit: prod.unit || 'kg'
+      },
+      name: prod.name || `Sản phẩm #${prod.id}`,
+      image: parseImg(prod),
+      hoverimage: parseImg(prod),
+      price: formattedPrice,
+      origin: prod.origin || farm.location,
+      rating: prod.rating || 5,
+      reviews: prod.reviews || 18
+    };
+  });
+
+  const handleAddCartItem = (productItem) => {
+    if (onAddToCart) {
+      onAddToCart(productItem.rawProduct);
+      toast.success(`Đã thêm "${productItem.name}" vào giỏ hàng!`);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50/60 pb-12">
       {/* Cover Image */}
       <div className="relative h-64 md:h-80 bg-gray-200">
         <img 
@@ -226,21 +138,17 @@ const supplies = farm.supplies;
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Farm Header */}
         <div className="relative -mt-20 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden flex-shrink-0 bg-gray-200 mx-auto md:mx-0">
-                <img 
-                  src={farm.avatar} 
-                  alt={farm.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-cyan-400 to-[#0A2647] flex items-center justify-center text-white text-4xl font-bold mx-auto md:mx-0">
+                {farm.name ? farm.name.charAt(0).toUpperCase() : 'F'}
               </div>
               
               <div className="flex-1 text-center md:text-left">
                 <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-                  <h1 style={{ color: '#0A2647' }}>{farm.name}</h1>
+                  <h1 className="text-2xl font-extrabold" style={{ color: '#0A2647' }}>{farm.name}</h1>
                   {farm.verified && (
-                    <BadgeCheck className="w-6 h-6" style={{ color: '#00BCD4' }} />
+                    <BadgeCheck className="w-6 h-6 text-[#00BCD4]" />
                   )}
                 </div>
                 
@@ -254,14 +162,11 @@ const supplies = farm.supplies;
                         stroke={i < farm.rating ? '#FFD700' : '#D1D5DB'}
                       />
                     ))}
-                    <span className="text-sm ml-1">{farm.rating} ({farm.reviews} đánh giá)</span>
+                    <span className="text-sm ml-1 font-bold">{farm.rating} ({farm.reviews} đánh giá)</span>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4" />
+                    <MapPin className="w-4 h-4 text-[#00BCD4]" />
                     {farm.location}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Thành lập: {farm.established}
                   </div>
                 </div>
 
@@ -269,8 +174,7 @@ const supplies = farm.supplies;
                   {farm.certifications.map((cert, index) => (
                     <span 
                       key={index}
-                      className="px-3 py-1 rounded text-sm text-white"
-                      style={{ backgroundColor: '#2C5F8D' }}
+                      className="px-3 py-1 rounded-full text-xs font-bold text-white bg-slate-900 shadow-xs"
                     >
                       {cert}
                     </span>
@@ -278,20 +182,22 @@ const supplies = farm.supplies;
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                  <button 
-                    className="px-6 py-2 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  <a 
+                    href={`tel:${farm.phone}`}
+                    className="px-6 py-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 font-bold text-xs shadow-md shadow-cyan-200 cursor-pointer"
                     style={{ backgroundColor: '#00BCD4' }}
                   >
                     <Phone className="w-4 h-4" />
-                    Liên hệ ngay
-                  </button>
-                  <button 
-                    className="px-6 py-2 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    Liên hệ: {farm.phone}
+                  </a>
+                  <a 
+                    href={`mailto:${farm.email}`}
+                    className="px-6 py-2.5 border rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-bold text-xs cursor-pointer"
                     style={{ borderColor: '#0A2647', color: '#0A2647' }}
                   >
                     <Mail className="w-4 h-4" />
-                    Gửi tin nhắn
-                  </button>
+                    Gửi email
+                  </a>
                 </div>
               </div>
             </div>
@@ -302,62 +208,97 @@ const supplies = farm.supplies;
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* About */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="mb-4" style={{ color: '#0A2647' }}>Giới thiệu</h2>
-              <p className="text-gray-600 leading-relaxed">{farm.description}</p>
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-lg font-extrabold mb-4" style={{ color: '#0A2647' }}>Giới thiệu</h2>
+              <p className="text-gray-600 text-sm leading-relaxed">{farm.description}</p>
             </div>
 
-            {/* Products */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="mb-6" style={{ color: '#0A2647' }}>Sản lượng hiện có</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {supplies.map((supply) => (
-                  <SupplyCard key={supply.id} {...supply} />
-                ))}
+            {/* Products List styled like Homepage ProductCard */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-extrabold" style={{ color: '#0A2647' }}>Sản phẩm / Sản lượng hiện có</h2>
+                <span className="text-xs font-bold bg-cyan-50 text-[#00BCD4] px-3.5 py-1.5 rounded-full">
+                  {mappedProducts.length} sản phẩm đang bán
+                </span>
               </div>
+
+              {mappedProducts.length === 0 ? (
+                <div className="p-12 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <Package className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500 font-semibold">Trang trại hiện chưa đăng bán sản phẩm nào</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {mappedProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      image={product.image}
+                      hoverimage={product.hoverimage}
+                      name={product.name}
+                      price={product.price}
+                      origin={product.origin}
+                      rating={product.rating}
+                      reviews={product.reviews}
+                      onClick={() => onNavigate?.('product-detail', product.id)}
+                      onAddToCart={() => handleAddCartItem(product)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Contact Info */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="mb-4" style={{ color: '#0A2647' }}>Thông tin liên hệ</h3>
-              <div className="space-y-3">
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-base font-extrabold mb-4" style={{ color: '#0A2647' }}>Thông tin liên hệ</h3>
+              <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm">
-                  <Phone className="w-4 h-4" style={{ color: '#00BCD4' }} />
-                  <span className="text-gray-600">{farm.phone}</span>
+                  <div className="p-2 bg-cyan-50 text-[#00BCD4] rounded-lg">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">Số điện thoại</p>
+                    <span className="text-gray-800 font-bold text-xs">{farm.phone}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Mail className="w-4 h-4" style={{ color: '#00BCD4' }} />
-                  <span className="text-gray-600">{farm.email}</span>
+                  <div className="p-2 bg-cyan-50 text-[#00BCD4] rounded-lg">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">Email</p>
+                    <span className="text-gray-800 font-bold text-xs">{farm.email}</span>
+                  </div>
                 </div>
                 <div className="flex items-start gap-3 text-sm">
-                  <MapPin className="w-4 h-4 mt-0.5" style={{ color: '#00BCD4' }} />
-                  <span className="text-gray-600">{farm.location}</span>
+                  <div className="p-2 bg-cyan-50 text-[#00BCD4] rounded-lg">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">Địa chỉ trang trại</p>
+                    <span className="text-gray-800 font-semibold text-xs">{farm.location}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="mb-4" style={{ color: '#0A2647' }}>Thống kê</h3>
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+              <h3 className="text-base font-extrabold mb-4" style={{ color: '#0A2647' }}>Thống kê trang trại</h3>
               <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Sản phẩm</span>
-                  <span className="font-medium" style={{ color: '#0A2647' }}>12</span>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Sản phẩm đang bán:</span>
+                  <span className="font-bold text-[#0A2647]">{mappedProducts.length} sản phẩm</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Đơn hàng</span>
-                  <span className="font-medium" style={{ color: '#0A2647' }}>247</span>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Loại nuôi trồng:</span>
+                  <span className="font-bold text-[#0A2647]">{farm.aquacultureType}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tỉ lệ phản hồi</span>
-                  <span className="font-medium" style={{ color: '#0A2647' }}>98%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Thời gian phản hồi</span>
-                  <span className="font-medium" style={{ color: '#0A2647' }}>2 giờ</span>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Trạng thái xác thực:</span>
+                  <span className="font-bold text-emerald-600">Đã kiểm duyệt</span>
                 </div>
               </div>
             </div>
@@ -367,3 +308,4 @@ const supplies = farm.supplies;
     </div>
   );
 }
+

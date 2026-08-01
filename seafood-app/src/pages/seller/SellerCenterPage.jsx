@@ -344,7 +344,7 @@ export function SellerCenterPage({ onNavigate }) {
               {/* Quick Actions */}
               <div>
                 <h3 className="text-lg font-bold mb-4" style={{ color: '#0A2647' }}>Hành động nhanh</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <button
                     onClick={() => setActiveTab('supply')}
                     className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
@@ -363,6 +363,16 @@ export function SellerCenterPage({ onNavigate }) {
                     <Fish className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
                     <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Đăng sản phẩm mới</h4>
                     <p className="text-sm text-gray-600">Đăng bán sản phẩm hải sản đã chế biến</p>
+                  </button>
+
+                  <button
+                    onClick={() => onNavigate('dashboard')}
+                    className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
+                    style={{ borderColor: '#00BCD4' }}
+                  >
+                    <Package className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
+                    <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Quản lý đơn hàng</h4>
+                    <p className="text-sm text-gray-600">Duyệt & xử lý đơn hàng từ người mua</p>
                   </button>
 
                   <button

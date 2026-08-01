@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Store, Briefcase, Mail, Phone, MapPin, Shield, CheckCircle2, AlertCircle, Clock, FileText, Upload, Loader2 } from "lucide-react";
+import { User, Store, Briefcase, Mail, Phone, MapPin, Shield, CheckCircle2, AlertCircle, Clock, FileText, Upload, Loader2, Package, ArrowRight } from "lucide-react";
 import { authApi } from "../../api/auth";
 import { toast } from "react-hot-toast";
 
@@ -210,6 +210,37 @@ export function ProfilePage({ user, onNavigate }) {
               </div>
             </div>
           </div>
+
+          {/* Quick Access Order History Card for Customer / Buyer */}
+          {(['buyer', 'customer', 'business'].includes(userData?.role?.toLowerCase() || '')) && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-cyan-50 text-[#00BCD4] rounded-xl border border-cyan-100">
+                    <Package className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-base" style={{ color: "#0A2647" }}>
+                      Đơn hàng của tôi
+                    </h4>
+                    <p className="text-xs text-gray-400">Theo dõi tiến trình các đơn mua</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Xem lịch sử các đơn hàng hải sản đã đặt, chi tiết vận chuyển và trạng thái cập nhật mới nhất.
+              </p>
+
+              <button
+                onClick={() => onNavigate?.('order-management')}
+                className="w-full py-2.5 bg-gradient-to-r from-[#0A2647] to-slate-800 hover:from-[#0D3866] hover:to-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-sm mt-1"
+              >
+                <span>Xem lịch sử đơn hàng</span>
+                <ArrowRight className="w-4 h-4 text-[#00BCD4]" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Profile details & verification status */}

@@ -280,10 +280,9 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
                 <button
                   onClick={() => {
                     if (typeof onAddToCart === 'function') {
-                      // SỬA Ở ĐÂY: Truyền product sạch đã biến đổi giá thành Số Nguyên
+                      // Truyền product sạch đã biến đổi giá thành Số Nguyên
                       const cleanProduct = getCleanProductForCart();
                       onAddToCart(cleanProduct, quantity);
-                      onNavigate('cart'); 
                     }
                   }}
                   className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium"

@@ -36,9 +36,15 @@ async function request(endpoint, options = {}) {
   }
 
   // Auto-inject Token from localStorage if exists
-  const token = localStorage.getItem('token') || localStorage.getItem('currentUser') 
-    ? JSON.parse(localStorage.getItem('currentUser') || '{}').token 
-    : null;
+  let token = localStorage.getItem('token');
+  if (!token) {
+    try {
+      const userObj = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      token = userObj.token || null;
+    } catch {
+      token = null;
+    }
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

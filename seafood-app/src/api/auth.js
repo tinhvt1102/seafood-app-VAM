@@ -91,5 +91,24 @@ export const authApi = {
    */
   getMyBusinessProfile: async () => {
     return await apiClient.get('/Profiles/business/me');
+  },
+
+  /**
+   * Get list of approved seller profiles (trang trại hải sản) cho trang Tìm nguồn hải sản
+   */
+  getApprovedSellers: async (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.pageNumber) query.append('pageNumber', params.pageNumber);
+    if (params.pageSize) query.append('pageSize', params.pageSize);
+    if (params.search) query.append('search', params.search);
+    const queryStr = query.toString();
+    return await apiClient.get(`${ENDPOINTS.PROFILES.APPROVED_SELLERS}${queryStr ? `?${queryStr}` : ''}`);
+  },
+
+  /**
+   * Get detail of a specific seller profile including their active products
+   */
+  getSellerDetail: async (id) => {
+    return await apiClient.get(ENDPOINTS.PROFILES.SELLER_DETAIL(id));
   }
 };

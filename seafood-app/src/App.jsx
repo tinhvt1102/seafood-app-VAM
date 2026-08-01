@@ -16,7 +16,7 @@ import { ProfilePage } from './pages/common/ProfilePage';
 import { ContactPage } from './pages/common/ContactPage';
 import { B2BCartPage } from './pages/buyer/B2BCartPage';
 import { ListingManagementPage } from './pages/seller/ListingManagementPage';
-import { OrderManagementPage } from './pages/seller/OrderManagementPage';
+import { OrderHistoryPage } from './pages/buyer/OrderHistoryPage';
 import { SellerCenterPage } from './pages/seller/SellerCenterPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { ProductApprovalPage } from './pages/admin/ProductApprovalPage';
@@ -217,30 +217,30 @@ export default function App() {
 
   // 6. Hệ thống phân quyền truy cập trang (Role-based Authentication)
   const canAccess = (page) => {
-    if (['home', 'retail', 'supply', 'product-detail', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page)) return true;
+    if (['home', 'retail', 'supply', 'suppliers', 'farm-profile', 'product-detail', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page)) return true;
     if (user && page === 'profile') return true;
     if (!user) {
-      return ['home', 'login', 'contact', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'payment-success', 'payment-fail'].includes(page);
+      return ['home', 'login', 'contact', 'retail', 'supply', 'suppliers', 'farm-profile', 'product-detail', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
     }
     const role = user.role?.toLowerCase();
     if (role === 'admin') return true;
     switch (role) {
       case 'buyer':
-        return ['home', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'contact', 'order-management', 'payment-success', 'payment-fail'].includes(page);
+      case 'customer':
+      case 'business':
+        return ['home', 'retail', 'product-detail', 'cart', 'checkout', 'supply', 'suppliers', 'farm-profile', 'contact', 'order-management', 'payment-success', 'payment-fail'].includes(page);
       case 'farmer':
       case 'seller':
-        return ['home', 'retail', 'supply', 'dashboard', 'seller-center', 'listing-management', 'order-management', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
-      case 'business':
-        return ['home', 'retail', 'supply', 'suppliers', 'contact', 'farm-profile', 'b2b-cart', 'order-management', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
+        return ['home', 'retail', 'supply', 'suppliers', 'farm-profile', 'dashboard', 'seller-center', 'listing-management', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
       default:
-        return ['home', 'retail', 'supply', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
+        return ['home', 'retail', 'supply', 'suppliers', 'farm-profile', 'contact', 'cart', 'checkout', 'payment-success', 'payment-fail'].includes(page);
     }
   };
 
   // 7. Render trang dựa trên phân quyền và trạng thái điều hướng
   const renderPage = () => {
     if (!canAccess(currentPage)) {
-      return <Homepage onNavigate={handleNavigate} products={products} />;
+      return <Homepage onAddToCart={handleAddToCart} onNavigate={handleNavigate} products={products} />;
     }
 
     switch (currentPage) {
@@ -265,7 +265,7 @@ export default function App() {
           />
         );
       case 'farm-profile':
-        return <FarmProfilePage farmId={pageData.id} />;
+        return <FarmProfilePage farmId={pageData.id} onNavigate={handleNavigate} onAddToCart={handleAddToCart} />;
       case 'cart':
         return <CartPage cartItems={cartItems} setCartItems={setCartItems} onNavigate={handleNavigate} />;
       case 'supply':
@@ -299,7 +299,7 @@ export default function App() {
       case 'listing-management':
         return <ListingManagementPage onNavigate={handleNavigate} />;
       case 'order-management':
-        return <OrderManagementPage onNavigate={handleNavigate} />;
+        return <OrderHistoryPage onNavigate={handleNavigate} />;
       case 'seller-center':
         return <SellerCenterPage onNavigate={handleNavigate} />;
       case 'admin-dashboard':
@@ -309,7 +309,7 @@ export default function App() {
       case 'admin-orders':
         return <AdminOrderManagementPage onNavigate={handleNavigate} />;
       default:
-        return <Homepage onNavigate={handleNavigate} />;
+        return <Homepage onAddToCart={handleAddToCart} onNavigate={handleNavigate} products={products} />;
     }
   };
 
