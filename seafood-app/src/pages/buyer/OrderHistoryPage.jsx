@@ -38,10 +38,10 @@ const parseProductImageUrl = (raw) => {
     return url;
   }
   if (url.startsWith('/uploads/')) {
-    return `http://localhost:5000${url}`;
+    return `https://vam-be.onrender.com${url}`;
   }
   if (url.startsWith('uploads/')) {
-    return `http://localhost:5000/${url}`;
+    return `https://vam-be.onrender.com/${url}`;
   }
 
   return url;
