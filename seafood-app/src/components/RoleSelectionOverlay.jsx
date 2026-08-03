@@ -116,13 +116,13 @@ export function RoleSelectionOverlay({ user, onStatusUpdated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4 overflow-y-auto animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transition-all duration-300 transform scale-100 my-8">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-3 sm:p-4 overflow-y-auto animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden transition-all duration-300 transform scale-100 my-auto">
         
         {/* Banner Decor */}
-        <div className="h-3 bg-gradient-to-r from-cyan-500 via-[#00BCD4] to-[#0A2647]" />
+        <div className="h-3 bg-gradient-to-r from-cyan-500 via-[#00BCD4] to-[#0A2647] flex-shrink-0" />
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
           {step === "select" && (
             <div>
               <div className="text-center mb-8">
