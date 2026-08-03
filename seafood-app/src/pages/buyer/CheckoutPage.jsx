@@ -21,6 +21,92 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
     note: ""
   });
 
+// API Provinces Open-API Vietnam integration
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingWards, setLoadingWards] = useState(false);
+
+  // Fetch Tỉnh / Thành phố (depth=1)
+  useEffect(() => {
+    async function fetchProvinces() {
+      setLoadingProvinces(true);
+      try {
+        const res = await fetch("https://provinces.open-api.vn/api/p/");
+        const data = await res.json();
+        setProvinces(data || []);
+      } catch (err) {
+        console.error("Lỗi khi tải danh sách Tỉnh/Thành:", err);
+      } finally {
+        setLoadingProvinces(false);
+      }
+    }
+    fetchProvinces();
+  }, []);
+
+  // Fetch Quận / Huyện khi chọn Tỉnh (depth=2: chứa districts)
+  const handleProvinceChange = async (e) => {
+    const selectedProvinceName = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      city: selectedProvinceName,
+      district: "",
+      ward: ""
+    }));
+    setDistricts([]);
+    setWards([]);
+
+    if (!selectedProvinceName) return;
+
+    const matchedProvince = provinces.find((p) => p.name === selectedProvinceName);
+    if (!matchedProvince) return;
+
+    setLoadingDistricts(true);
+    try {
+      const res = await fetch(`https://provinces.open-api.vn/api/p/${matchedProvince.code}?depth=2`);
+      const data = await res.json();
+      setDistricts(data.districts || []);
+    } catch (err) {
+      console.error("Lỗi khi tải Quận/Huyện:", err);
+    } finally {
+      setLoadingDistricts(false);
+    }
+  };
+
+  // Fetch Phường / Xã khi chọn Quận / Huyện (depth=2: chứa wards)
+  const handleDistrictChange = async (e) => {
+    const selectedDistrictName = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      district: selectedDistrictName,
+      ward: ""
+    }));
+    setWards([]);
+
+    if (!selectedDistrictName) return;
+
+    const matchedDistrict = districts.find((d) => d.name === selectedDistrictName);
+    if (!matchedDistrict) return;
+
+    setLoadingWards(true);
+    try {
+      const res = await fetch(`https://provinces.open-api.vn/api/d/${matchedDistrict.code}?depth=2`);
+      const data = await res.json();
+      setWards(data.wards || []);
+    } catch (err) {
+      console.error("Lỗi khi tải Phường/Xã:", err);
+    } finally {
+      setLoadingWards(false);
+    }
+  };
+
+  const handleWardChange = (e) => {
+    const selectedWardName = e.target.value;
+    setFormData((prev) => ({ ...prev, ward: selectedWardName }));
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -248,39 +334,56 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
                   <select
                     name="city"
                     value={formData.city}
-                    onChange={handleInputChange}
+                    onChange={handleProvinceChange}
                     required
-                    className="p-3 border rounded-md bg-white"
+                    disabled={loadingProvinces}
+                    className="p-3 border rounded-md bg-white disabled:bg-gray-100"
                     style={{ borderColor: "#e5e7eb" }}
                   >
-                    <option value="">Chọn Tỉnh/Thành phố</option>
-                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                    <option value="Hà Nội">Hà Nội</option>
-                    <option value="Cà Mau">Cà Mau</option>
+                    <option value="">
+                      {loadingProvinces ? "Đang tải Tỉnh/Thành..." : "Chọn Tỉnh/Thành phố"}
+                    </option>
+                    {provinces.map((p) => (
+                      <option key={p.code} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
                   </select>
                   <select
                     name="district"
                     value={formData.district}
-                    onChange={handleInputChange}
+                    onChange={handleDistrictChange}
                     required
-                    className="p-3 border rounded-md bg-white"
+                    disabled={!formData.city || loadingDistricts}
+                    className="p-3 border rounded-md bg-white disabled:bg-gray-100"
                     style={{ borderColor: "#e5e7eb" }}
                   >
-                    <option value="">Chọn Quận/Huyện</option>
-                    <option value="Quận 1">Quận 1</option>
-                    <option value="Quận 7">Quận 7</option>
+                    <option value="">
+                      {loadingDistricts ? "Đang tải Quận/Huyện..." : "Chọn Quận/Huyện"}
+                    </option>
+                    {districts.map((d) => (
+                      <option key={d.code} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
                   </select>
                   <select
                     name="ward"
                     value={formData.ward}
-                    onChange={handleInputChange}
+                    onChange={handleWardChange}
                     required
-                    className="p-3 border rounded-md bg-white"
+                    disabled={!formData.district || loadingWards}
+                    className="p-3 border rounded-md bg-white disabled:bg-gray-100"
                     style={{ borderColor: "#e5e7eb" }}
                   >
-                    <option value="">Chọn Phường/Xã</option>
-                    <option value="Phường 1">Phường 1</option>
-                    <option value="Phường 2">Phường 2</option>
+                    <option value="">
+                      {loadingWards ? "Đang tải Phường/Xã..." : "Chọn Phường/Xã"}
+                    </option>
+                    {wards.map((w) => (
+                      <option key={w.code} value={w.name}>
+                        {w.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

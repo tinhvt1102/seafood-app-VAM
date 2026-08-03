@@ -19,6 +19,9 @@ export function ProfilePage({ user, onNavigate }) {
   const [farmName, setFarmName] = useState("");
   const [farmAddress, setFarmAddress] = useState("");
   const [aquacultureType, setAquacultureType] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
   const [sellerCert, setSellerCert] = useState(null);
 
   const [companyName, setCompanyName] = useState("");
@@ -69,12 +72,20 @@ export function ProfilePage({ user, onNavigate }) {
       return;
     }
 
+    if (!bankName.trim() || !accountNumber.trim() || !accountHolderName.trim()) {
+      toast.error("Vui lòng điền đầy đủ thông tin tài khoản ngân hàng (Tên ngân hàng, Số TK, Chủ TK) để nhận tiền doanh thu tự động!");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("FarmName", farmName.trim());
       formData.append("FarmAddress", farmAddress.trim());
       formData.append("AquacultureType", aquacultureType.trim());
+      formData.append("BankName", bankName.trim());
+      formData.append("AccountNumber", accountNumber.trim());
+      formData.append("AccountHolderName", accountHolderName.trim().toUpperCase());
       if (sellerCert) {
         if (sellerCert.type !== "application/pdf" && !sellerCert.name.endsWith(".pdf")) {
           toast.error("Chỉ chấp nhận file tài liệu dạng PDF!");
@@ -285,6 +296,12 @@ export function ProfilePage({ user, onNavigate }) {
                       <p className="text-xs text-gray-400">Địa chỉ trang trại</p>
                       <p className="font-semibold text-gray-800">{sellerProfile.farmAddress || "Chưa cập nhật"}</p>
                     </div>
+                    <div className="md:col-span-2 pt-2 border-t border-teal-100/80">
+                      <p className="text-xs font-bold text-teal-800 mb-1">💳 Tài khoản nhận doanh thu (Payout)</p>
+                      <p className="text-xs text-gray-700">
+                        Ngân hàng: <strong>{sellerProfile.bankName || "Chưa cập nhật"}</strong> | STK: <strong>{sellerProfile.accountNumber || "N/A"}</strong> | Chủ TK: <strong>{sellerProfile.accountHolderName || "N/A"}</strong>
+                      </p>
+                    </div>
                     {sellerProfile.certificate && (
                       <div className="md:col-span-2 pt-2">
                         <p className="text-xs text-gray-400 mb-1.5">Tài liệu đính kèm (Giấy chứng nhận)</p>
@@ -441,6 +458,76 @@ export function ProfilePage({ user, onNavigate }) {
                       onChange={(e) => setAquacultureType(e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BCD4] bg-gray-50/50 text-sm"
                     />
+                  </div>
+
+                  {/* Thông tin tài khoản ngân hàng (Bắt buộc cho Payout) */}
+                  <div className="p-4 bg-cyan-50/50 border border-cyan-100 rounded-xl space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-800 flex items-center gap-1.5">
+                      <span>💳 Tài khoản nhận doanh thu bán hàng</span>
+                      <span className="text-red-500">*</span>
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      Hệ thống dùng thông tin này để tự động chi hộ 95% tiền bán hàng trực tiếp về tài khoản của bạn qua VietQR.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1 text-gray-700">
+                          Ngân hàng thụ hưởng <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BCD4] bg-white text-xs font-medium"
+                        >
+                          <option value="">-- Chọn ngân hàng --</option>
+                          <option value="MB">MBBank (Ngân hàng Quân Đội)</option>
+                          <option value="VCB">Vietcombank</option>
+                          <option value="TCB">Techcombank</option>
+                          <option value="CTG">VietinBank</option>
+                          <option value="BIDV">BIDV</option>
+                          <option value="VPB">VPBank</option>
+                          <option value="VBA">Agribank</option>
+                          <option value="ACB">ACB</option>
+                          <option value="TPB">TPBank</option>
+                          <option value="STB">Sacombank</option>
+                          <option value="HDB">HDBank</option>
+                          <option value="MSB">MSB</option>
+                          <option value="OCB">OCB</option>
+                          <option value="VIB">VIB</option>
+                          <option value="SEAB">SeABank</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1 text-gray-700">
+                          Số tài khoản <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ví dụ: 0987654321"
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BCD4] bg-white text-xs font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1 text-gray-700">
+                        Tên chủ tài khoản (Viết hoa không dấu) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ví dụ: NGUYEN VAN A"
+                        value={accountHolderName}
+                        onChange={(e) => setAccountHolderName(e.target.value.toUpperCase())}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00BCD4] bg-white text-xs font-semibold uppercase"
+                      />
+                    </div>
                   </div>
 
                   <div>

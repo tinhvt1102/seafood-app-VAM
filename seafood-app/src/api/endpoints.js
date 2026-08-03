@@ -35,6 +35,7 @@ export const ENDPOINTS = {
     FARM_DETAIL: (id) => `/suppliers/farms/${id}`,
   },
   ORDERS: {
+    LIST: '/orders',
     CREATE: '/orders',
     MY_ORDERS: '/orders/my-orders',
     SELLER_ORDERS: '/orders/seller-orders',

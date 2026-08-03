@@ -36,6 +36,9 @@ export function LoginPage({ onNavigate, setCart }) {
         const response = await authApi.login(email.trim(), password);
         const userRole = response.user?.role || response.role || "buyer";
         localStorage.setItem("token", response.token);
+        if (response.refreshToken) {
+          localStorage.setItem("refreshToken", response.refreshToken);
+        }
         localStorage.setItem(
           "currentUser",
           JSON.stringify({
@@ -45,6 +48,7 @@ export function LoginPage({ onNavigate, setCart }) {
             role: userRole,
             status: response.user?.status || response.status || "active",
             token: response.token,
+            refreshToken: response.refreshToken || null,
           }),
         );
 
@@ -104,6 +108,9 @@ export function LoginPage({ onNavigate, setCart }) {
       const userRole = apiResponse.user?.role || apiResponse.role || "buyer";
 
       localStorage.setItem("token", apiResponse.token);
+      if (apiResponse.refreshToken) {
+        localStorage.setItem("refreshToken", apiResponse.refreshToken);
+      }
       localStorage.setItem(
         "currentUser",
         JSON.stringify({
@@ -113,6 +120,7 @@ export function LoginPage({ onNavigate, setCart }) {
           role: userRole,
           status: apiResponse.user?.status || apiResponse.status || "active",
           token: apiResponse.token,
+          refreshToken: apiResponse.refreshToken || null,
         }),
       );
 
