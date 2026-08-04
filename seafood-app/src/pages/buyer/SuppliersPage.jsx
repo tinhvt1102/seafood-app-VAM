@@ -41,7 +41,7 @@ export function SuppliersPage({ onNavigate }) {
       // Map dữ liệu từ SellerProfiles đã duyệt
       const mappedProfiles = sellerProfiles.map((sp) => {
         const certs = sp.certificate
-          ? [sp.certificate.endsWith('.pdf') ? 'Giấy chứng nhận (PDF)' : sp.certificate]
+          ? ['Đã xác minh chứng nhận']
           : ['VietGAP'];
         return {
           id: `profile-${sp.id}`,
@@ -59,9 +59,14 @@ export function SuppliersPage({ onNavigate }) {
 
       // Map dữ liệu từ Farms
       const mappedFarms = farms.map((farm) => {
-        const certs = farm.certificate
-          ? farm.certificate.split(',').map(c => c.trim()).filter(Boolean)
-          : ['VietGAP'];
+        let certs = [];
+        if (farm.certificate) {
+          if (farm.certificate.startsWith('http') || farm.certificate.includes('firebase')) {
+            certs = ['Đã xác minh chứng nhận'];
+          } else {
+            certs = farm.certificate.split(',').map(c => c.trim()).filter(Boolean);
+          }
+        }
         return {
           id: `farm-${farm.id}`,
           name: farm.farmName || `Hộ nuôi #${farm.id}`,

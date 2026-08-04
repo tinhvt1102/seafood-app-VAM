@@ -18,10 +18,10 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
     city: "",
     district: "",
     ward: "",
-    note: ""
+    note: "",
   });
 
-// API Provinces Open-API Vietnam integration
+  // API Provinces Open-API Vietnam integration
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -53,19 +53,23 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       ...prev,
       city: selectedProvinceName,
       district: "",
-      ward: ""
+      ward: "",
     }));
     setDistricts([]);
     setWards([]);
 
     if (!selectedProvinceName) return;
 
-    const matchedProvince = provinces.find((p) => p.name === selectedProvinceName);
+    const matchedProvince = provinces.find(
+      (p) => p.name === selectedProvinceName,
+    );
     if (!matchedProvince) return;
 
     setLoadingDistricts(true);
     try {
-      const res = await fetch(`https://provinces.open-api.vn/api/p/${matchedProvince.code}?depth=2`);
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/p/${matchedProvince.code}?depth=2`,
+      );
       const data = await res.json();
       setDistricts(data.districts || []);
     } catch (err) {
@@ -81,18 +85,22 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
     setFormData((prev) => ({
       ...prev,
       district: selectedDistrictName,
-      ward: ""
+      ward: "",
     }));
     setWards([]);
 
     if (!selectedDistrictName) return;
 
-    const matchedDistrict = districts.find((d) => d.name === selectedDistrictName);
+    const matchedDistrict = districts.find(
+      (d) => d.name === selectedDistrictName,
+    );
     if (!matchedDistrict) return;
 
     setLoadingWards(true);
     try {
-      const res = await fetch(`https://provinces.open-api.vn/api/d/${matchedDistrict.code}?depth=2`);
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/d/${matchedDistrict.code}?depth=2`,
+      );
       const data = await res.json();
       setWards(data.wards || []);
     } catch (err) {
@@ -143,7 +151,7 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
         : parseInt(String(item.price).replace(/\D/g, ""), 10) || 0;
     return sum + price * item.quantity;
   }, 0);
-  const serviceFee = subtotal * 0.05; // Phí dịch vụ 5% tổng đơn hàng
+  const serviceFee = subtotal * 0.025; // Phí dịch vụ 2.5% tổng đơn hàng
   const total = subtotal + serviceFee;
 
   const handleSubmit = async (e) => {
@@ -157,12 +165,16 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
 
     setLoading(true);
 
-    const fullAddress = `${formData.street}, ${formData.ward}, ${formData.district}, ${formData.city}`.replace(/^, |, $/g, '');
+    const fullAddress =
+      `${formData.street}, ${formData.ward}, ${formData.district}, ${formData.city}`.replace(
+        /^, |, $/g,
+        "",
+      );
 
     // Map orderItems sang định dạng backend API DTO
     const orderItemsDto = checkoutItems.map((item) => ({
       productId: Number(item.id),
-      quantity: Number(item.quantity)
+      quantity: Number(item.quantity),
     }));
 
     try {
@@ -172,13 +184,17 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       try {
         createdOrder = await orderApi.createOrder({
           shippingAddress: fullAddress || "TP. Hồ Chí Minh",
-          orderItems: orderItemsDto
+          orderItems: orderItemsDto,
         });
       } catch (dbError) {
-        console.warn("Backend order creation error, using fallback client order creation:", dbError);
+        console.warn(
+          "Backend order creation error, using fallback client order creation:",
+          dbError,
+        );
       }
 
-      const orderId = createdOrder?.id || Math.floor(100000 + Math.random() * 900000);
+      const orderId =
+        createdOrder?.id || Math.floor(100000 + Math.random() * 900000);
 
       const orderData = {
         id: orderId,
@@ -201,10 +217,15 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       // Nếu chọn thanh toán PayOS (VietQR)
       if (paymentMethod === "payos") {
         try {
-          const res = await paymentApi.createCheckoutUrl(orderId, Math.round(total));
+          const res = await paymentApi.createCheckoutUrl(
+            orderId,
+            Math.round(total),
+          );
           if (res?.checkoutUrl) {
-            toast.success("Đang chuyển hướng sang cổng thanh toán PayOS (VietQR)...");
-            
+            toast.success(
+              "Đang chuyển hướng sang cổng thanh toán PayOS (VietQR)...",
+            );
+
             // Xóa giỏ hàng trước khi nhảy sang trang PayOS
             if (isDirectCheckout) {
               localStorage.removeItem("directCheckoutItem");
@@ -219,7 +240,10 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
           }
         } catch (payosError) {
           console.error("Lỗi khi tạo PayOS Checkout URL:", payosError);
-          toast.error(payosError?.message || "Không thể tạo link thanh toán PayOS VietQR. Vui lòng kiểm tra lại backend.");
+          toast.error(
+            payosError?.message ||
+              "Không thể tạo link thanh toán PayOS VietQR. Vui lòng kiểm tra lại backend.",
+          );
           setLoading(false);
           return;
         }
@@ -240,7 +264,9 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       onNavigate("payment-success", orderId);
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);
-      toast.error(error?.message || "Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại!");
+      toast.error(
+        error?.message || "Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại!",
+      );
     } finally {
       setLoading(false);
     }
@@ -341,7 +367,9 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
                     style={{ borderColor: "#e5e7eb" }}
                   >
                     <option value="">
-                      {loadingProvinces ? "Đang tải Tỉnh/Thành..." : "Chọn Tỉnh/Thành phố"}
+                      {loadingProvinces
+                        ? "Đang tải Tỉnh/Thành..."
+                        : "Chọn Tỉnh/Thành phố"}
                     </option>
                     {provinces.map((p) => (
                       <option key={p.code} value={p.name}>
@@ -359,7 +387,9 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
                     style={{ borderColor: "#e5e7eb" }}
                   >
                     <option value="">
-                      {loadingDistricts ? "Đang tải Quận/Huyện..." : "Chọn Quận/Huyện"}
+                      {loadingDistricts
+                        ? "Đang tải Quận/Huyện..."
+                        : "Chọn Quận/Huyện"}
                     </option>
                     {districts.map((d) => (
                       <option key={d.code} value={d.name}>
@@ -377,7 +407,9 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
                     style={{ borderColor: "#e5e7eb" }}
                   >
                     <option value="">
-                      {loadingWards ? "Đang tải Phường/Xã..." : "Chọn Phường/Xã"}
+                      {loadingWards
+                        ? "Đang tải Phường/Xã..."
+                        : "Chọn Phường/Xã"}
                     </option>
                     {wards.map((w) => (
                       <option key={w.code} value={w.name}>
@@ -433,10 +465,17 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
                     <QrCode className="w-5 h-5 text-[#00BCD4]" />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-900">Thanh toán PayOS (Mã VietQR)</span>
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-[#00BCD4] text-white rounded-full">Khuyên dùng</span>
+                        <span className="font-semibold text-gray-900">
+                          Thanh toán PayOS (Mã VietQR)
+                        </span>
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-[#00BCD4] text-white rounded-full">
+                          Khuyên dùng
+                        </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Quét mã VietQR thanh toán nhanh 24/7 từ mọi ứng dụng Ngân hàng</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Quét mã VietQR thanh toán nhanh 24/7 từ mọi ứng dụng
+                        Ngân hàng
+                      </p>
                     </div>
                   </div>
                 </label>
@@ -508,9 +547,14 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
                   <div className="flex items-start gap-3">
                     <QrCode className="w-6 h-6 text-[#00BCD4] flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-slate-700 space-y-1">
-                      <p className="font-semibold text-[#0A2647]">Thanh toán tự động qua PayOS (VietQR)</p>
+                      <p className="font-semibold text-[#0A2647]">
+                        Thanh toán tự động qua PayOS (VietQR)
+                      </p>
                       <p className="text-xs text-slate-600">
-                        Sau khi nhấn <strong>"Xác nhận thanh toán"</strong>, hệ thống sẽ chuyển tới trang mã VietQR của PayOS. Đơn hàng của bạn sẽ tự động cập nhật trạng thái thanh toán ngay khi giao dịch thành công.
+                        Sau khi nhấn <strong>"Xác nhận thanh toán"</strong>, hệ
+                        thống sẽ chuyển tới trang mã VietQR của PayOS. Đơn hàng
+                        của bạn sẽ tự động cập nhật trạng thái thanh toán ngay
+                        khi giao dịch thành công.
                       </p>
                     </div>
                   </div>

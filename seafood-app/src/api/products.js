@@ -8,7 +8,7 @@ import { ENDPOINTS } from './endpoints';
 export const productApi = {
   /**
    * Lấy danh sách sản phẩm có filter & phân trang
-   * @param {Object} filter - { pageNumber, pageSize, search, status, categoryId, farmId, minPrice, maxPrice }
+   * @param {Object} filter - { pageNumber, pageSize, search, status, categoryId, farmId, minPrice, maxPrice, sellerId }
    */
   getProducts: (filter = {}) => {
     const params = new URLSearchParams();
@@ -18,11 +18,25 @@ export const productApi = {
     if (filter.status) params.append('status', filter.status);
     if (filter.categoryId) params.append('categoryId', filter.categoryId);
     if (filter.farmId) params.append('farmId', filter.farmId);
+    if (filter.sellerId) params.append('sellerId', filter.sellerId);
     if (filter.minPrice) params.append('minPrice', filter.minPrice);
     if (filter.maxPrice) params.append('maxPrice', filter.maxPrice);
     if (filter.isWholesale !== undefined && filter.isWholesale !== null) params.append('isWholesale', filter.isWholesale);
     const query = params.toString();
     return apiClient.get(`${ENDPOINTS.PRODUCTS.LIST}${query ? `?${query}` : ''}`);
+  },
+
+  /**
+   * Lấy danh sách sản phẩm của Seller đang đăng nhập
+   */
+  getMyProducts: (filter = {}) => {
+    const params = new URLSearchParams();
+    if (filter.pageNumber) params.append('pageNumber', filter.pageNumber);
+    if (filter.pageSize) params.append('pageSize', filter.pageSize);
+    if (filter.search) params.append('search', filter.search);
+    if (filter.status) params.append('status', filter.status);
+    const query = params.toString();
+    return apiClient.get(`${ENDPOINTS.PRODUCTS.LIST}/my-products${query ? `?${query}` : ''}`);
   },
 
   /**

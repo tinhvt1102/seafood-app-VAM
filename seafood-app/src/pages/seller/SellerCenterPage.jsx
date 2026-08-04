@@ -1,81 +1,128 @@
-import { useState, useRef, useEffect } from 'react';
-import { Upload, Save, Send, Package, Fish, AlertCircle, BarChart3, X, Loader2 } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import { productApi, categoryApi } from '../../api/products';
+import { useState, useRef, useEffect } from "react";
+import {
+  Upload,
+  Save,
+  Send,
+  Package,
+  Fish,
+  AlertCircle,
+  BarChart3,
+  X,
+  Loader2,
+} from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+import { productApi, categoryApi } from "../../api/products";
 
 export function SellerCenterPage({ onNavigate }) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
   // Supply form state — maps to CreateProductDto fields
   const [supplyForm, setSupplyForm] = useState({
-    seafoodType: '',
-    size: '',
-    quantity: '',
-    minOrderQuantity: '',
-    harvestDate: '',
-    proposedPrice: '',
-    location: '',
+    seafoodType: "",
+    size: "",
+    quantity: "",
+    minOrderQuantity: "",
+    harvestDate: "",
+    proposedPrice: "",
+    location: "",
     certifications: [],
-    images: [],       // File objects for upload
+    images: [], // File objects for upload
     imagePreviews: [], // URL.createObjectURL for preview
-    description: '',
-    categoryId: '',
+    description: "",
+    categoryId: "",
     isWholesale: true, // Đăng sản lượng mặc định là bán sỉ/sản lượng lớn
   });
 
   // Product form state — maps to CreateProductDto fields (Mặc định là bán lẻ)
   const [productForm, setProductForm] = useState({
-    productName: '',
-    categoryId: '',
-    price: '',
-    stock: '',
-    unit: 'kg',
-    images: [],       // File objects for upload
+    productName: "",
+    categoryId: "",
+    price: "",
+    stock: "",
+    unit: "kg",
+    images: [], // File objects for upload
     imagePreviews: [], // URL.createObjectURL for preview
-    description: ''
+    description: "",
   });
 
   // Refs cho các input file ẩn
   const supplyImageRef = useRef(null);
   const productImageRef = useRef(null);
 
-  const certificationOptions = ['VietGAP', 'ASC', 'GlobalG.A.P', 'BAP', 'MSC'];
-  const seafoodTypes = ['Tôm sú', 'Tôm thẻ', 'Cá Tra', 'Cá Basa', 'Cua biển', 'Mực', 'Ghẹ'];
-  const unitOptions = ['kg', 'tấn', 'con', 'hộp', 'thùng'];
+  const certificationOptions = ["VietGAP", "ASC", "GlobalG.A.P", "BAP", "MSC"];
+  const seafoodTypes = [
+    "Tôm sú",
+    "Tôm thẻ",
+    "Cá Tra",
+    "Cá Basa",
+    "Cua biển",
+    "Mực",
+    "Ghẹ",
+  ];
+  const unitOptions = ["kg", "tấn", "con", "hộp", "thùng"];
 
-  // Fetch categories từ API khi mount
+  // Thống kê thực tế từ API
+  const [stats, setStats] = useState({
+    totalListings: 0,
+    pendingListings: 0,
+    approvedListings: 0,
+    rejectedListings: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // Fetch categories và statistics từ API khi mount
   useEffect(() => {
     const fetchCategories = async () => {
       setLoadingCategories(true);
       try {
         const data = await categoryApi.getCategories({ pageSize: 100 });
-        // API trả về { items: [...], totalCount, ... } hoặc mảng trực tiếp
         const items = data?.items || data || [];
         setCategories(items);
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
-        toast.error('Không thể tải danh mục. Vui lòng thử lại.');
+        console.error("Failed to fetch categories:", err);
+        toast.error("Không thể tải danh mục. Vui lòng thử lại.");
       } finally {
         setLoadingCategories(false);
       }
     };
+
+    const fetchStats = async () => {
+      setLoadingStats(true);
+      try {
+        const [allData, pendingData, approvedData, rejectedData] = await Promise.all([
+          productApi.getMyProducts({ pageSize: 1 }),
+          productApi.getMyProducts({ pageSize: 1, status: 'pending' }),
+          productApi.getMyProducts({ pageSize: 1, status: 'approved' }),
+          productApi.getMyProducts({ pageSize: 1, status: 'rejected' }),
+        ]);
+        setStats({
+          totalListings: allData?.totalCount || (Array.isArray(allData) ? allData.length : 0),
+          pendingListings: pendingData?.totalCount || (Array.isArray(pendingData) ? pendingData.length : 0),
+          approvedListings: approvedData?.totalCount || (Array.isArray(approvedData) ? approvedData.length : 0),
+          rejectedListings: rejectedData?.totalCount || (Array.isArray(rejectedData) ? rejectedData.length : 0),
+        });
+      } catch (err) {
+        console.error("Failed to fetch seller stats:", err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
     fetchCategories();
+    fetchStats();
   }, []);
 
-  // Mock statistics (sẽ fetch từ API sau)
-  const stats = {
-    totalListings: 15,
-    pendingListings: 3,
-    approvedListings: 10,
-    rejectedListings: 2
-  };
-
   const handleSaveDraft = (type) => {
-    console.log(`Dữ liệu nháp ${type}:`, type === 'supply' ? supplyForm : productForm);
-    toast.success(`Đã lưu nháp ${type === 'supply' ? 'sản lượng' : 'sản phẩm'} thành công!`);
+    console.log(
+      `Dữ liệu nháp ${type}:`,
+      type === "supply" ? supplyForm : productForm,
+    );
+    toast.success(
+      `Đã lưu nháp ${type === "supply" ? "sản lượng" : "sản phẩm"} thành công!`,
+    );
   };
 
   /**
@@ -86,17 +133,29 @@ export function SellerCenterPage({ onNavigate }) {
     if (isSubmitting) return;
 
     // Validation
-    if (type === 'supply') {
-      if (!supplyForm.seafoodType || !supplyForm.size || !supplyForm.quantity ||
-          !supplyForm.harvestDate || !supplyForm.proposedPrice || !supplyForm.location ||
-          !supplyForm.description || !supplyForm.categoryId) {
-        toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
+    if (type === "supply") {
+      if (
+        !supplyForm.seafoodType ||
+        !supplyForm.size ||
+        !supplyForm.quantity ||
+        !supplyForm.harvestDate ||
+        !supplyForm.proposedPrice ||
+        !supplyForm.location ||
+        !supplyForm.description ||
+        !supplyForm.categoryId
+      ) {
+        toast.error("Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)");
         return;
       }
     } else {
-      if (!productForm.productName || !productForm.categoryId || !productForm.price ||
-          !productForm.stock || !productForm.description) {
-        toast.error('Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)');
+      if (
+        !productForm.productName ||
+        !productForm.categoryId ||
+        !productForm.price ||
+        !productForm.stock ||
+        !productForm.description
+      ) {
+        toast.error("Vui lòng điền đầy đủ các trường thông tin bắt buộc (*)");
         return;
       }
     }
@@ -106,89 +165,109 @@ export function SellerCenterPage({ onNavigate }) {
     try {
       const formData = new FormData();
 
-      if (type === 'supply') {
+      if (type === "supply") {
         // Map supply form → CreateProductDto fields
         const name = `${supplyForm.seafoodType} - Size ${supplyForm.size}`;
-        formData.append('Name', name);
-        formData.append('CategoryId', supplyForm.categoryId);
-        formData.append('Price', supplyForm.proposedPrice);
-        formData.append('Quantity', supplyForm.quantity);
-        formData.append('Unit', 'kg');
-        formData.append('IsWholesale', 'true');
-        formData.append('MinOrderQuantity', supplyForm.minOrderQuantity || '1');
+        formData.append("Name", name);
+        formData.append("CategoryId", supplyForm.categoryId);
+        formData.append("Price", supplyForm.proposedPrice);
+        formData.append("Quantity", supplyForm.quantity);
+        formData.append("Unit", "kg");
+        formData.append("IsWholesale", "true");
+        formData.append("MinOrderQuantity", supplyForm.minOrderQuantity || "1");
 
         // Gộp thông tin chi tiết vào Description
-        const certText = supplyForm.certifications.length > 0
-          ? `\nChứng nhận: ${supplyForm.certifications.join(', ')}`
-          : '';
+        const certText =
+          supplyForm.certifications.length > 0
+            ? `\nChứng nhận: ${supplyForm.certifications.join(", ")}`
+            : "";
         const description = [
           supplyForm.description,
           `\nĐịa điểm: ${supplyForm.location}`,
           `\nNgày thu hoạch: ${supplyForm.harvestDate}`,
           `\nSize: ${supplyForm.size}`,
-          certText
-        ].join('');
-        formData.append('Description', description);
+          certText,
+        ].join("");
+        formData.append("Description", description);
 
         // Đính kèm file ảnh
-        supplyForm.images.forEach(file => {
-          formData.append('Images', file);
+        supplyForm.images.forEach((file) => {
+          formData.append("Images", file);
         });
       } else {
         // Map product form → CreateProductDto fields (Mặc định bán lẻ, mua tối thiểu 1)
-        formData.append('Name', productForm.productName);
-        formData.append('CategoryId', productForm.categoryId);
-        formData.append('Price', productForm.price);
-        formData.append('Quantity', productForm.stock);
-        formData.append('Unit', productForm.unit);
-        formData.append('IsWholesale', 'false');
-        formData.append('MinOrderQuantity', '1');
-        formData.append('Description', productForm.description);
+        formData.append("Name", productForm.productName);
+        formData.append("CategoryId", productForm.categoryId);
+        formData.append("Price", productForm.price);
+        formData.append("Quantity", productForm.stock);
+        formData.append("Unit", productForm.unit);
+        formData.append("IsWholesale", "false");
+        formData.append("MinOrderQuantity", "1");
+        formData.append("Description", productForm.description);
 
         // Đính kèm file ảnh
-        productForm.images.forEach(file => {
-          formData.append('Images', file);
+        productForm.images.forEach((file) => {
+          formData.append("Images", file);
         });
       }
 
       await productApi.createProduct(formData);
 
-      toast.success('Đã gửi xét duyệt thành công! Admin sẽ xem xét trong thời gian sớm nhất.', {
-        duration: 4000
-      });
+      toast.success(
+        "Đã gửi xét duyệt thành công! Admin sẽ xem xét trong thời gian sớm nhất.",
+        {
+          duration: 4000,
+        },
+      );
 
       // Reset form sau khi thành công
-      if (type === 'supply') {
+      if (type === "supply") {
         // Revoke preview URLs to free memory
-        supplyForm.imagePreviews.forEach(url => URL.revokeObjectURL(url));
+        supplyForm.imagePreviews.forEach((url) => URL.revokeObjectURL(url));
         setSupplyForm({
-          seafoodType: '', size: '', quantity: '', minOrderQuantity: '', harvestDate: '',
-          proposedPrice: '', location: '', certifications: [],
-          images: [], imagePreviews: [], description: '', categoryId: '', isWholesale: true,
+          seafoodType: "",
+          size: "",
+          quantity: "",
+          minOrderQuantity: "",
+          harvestDate: "",
+          proposedPrice: "",
+          location: "",
+          certifications: [],
+          images: [],
+          imagePreviews: [],
+          description: "",
+          categoryId: "",
+          isWholesale: true,
         });
       } else {
-        productForm.imagePreviews.forEach(url => URL.revokeObjectURL(url));
+        productForm.imagePreviews.forEach((url) => URL.revokeObjectURL(url));
         setProductForm({
-          productName: '', categoryId: '', price: '', stock: '',
-          unit: 'kg', images: [], imagePreviews: [], description: ''
+          productName: "",
+          categoryId: "",
+          price: "",
+          stock: "",
+          unit: "kg",
+          images: [],
+          imagePreviews: [],
+          description: "",
         });
       }
 
-      onNavigate('listing-management');
+      onNavigate("listing-management");
     } catch (error) {
-      console.error('Submit error:', error);
-      toast.error(error.message || 'Gửi bài đăng thất bại. Vui lòng thử lại.');
+      console.error("Submit error:", error);
+      toast.error(error.message || "Gửi bài đăng thất bại. Vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCertificationToggle = (cert) => {
-    setSupplyForm(prev => ({
+    setSupplyForm((prev) => ({
       ...prev,
       certifications: prev.certifications.includes(cert)
-        ? prev.certifications.filter(c => c !== cert)
-        : [...prev.certifications, cert]
+        ? prev.certifications.filter((c) => c !== cert)
+        : [...prev.certifications, cert],
     }));
   };
 
@@ -197,52 +276,56 @@ export function SellerCenterPage({ onNavigate }) {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
 
-      if (type === 'supply') {
+      if (type === "supply") {
         if (supplyForm.images.length >= 5) {
-          toast.error('Tối đa chỉ được tải lên 5 ảnh sản lượng!');
+          toast.error("Tối đa chỉ được tải lên 5 ảnh sản lượng!");
           return;
         }
-        const newPreviews = filesArray.map(file => URL.createObjectURL(file));
-        setSupplyForm(prev => ({
+        const newPreviews = filesArray.map((file) => URL.createObjectURL(file));
+        setSupplyForm((prev) => ({
           ...prev,
           images: [...prev.images, ...filesArray].slice(0, 5),
-          imagePreviews: [...prev.imagePreviews, ...newPreviews].slice(0, 5)
+          imagePreviews: [...prev.imagePreviews, ...newPreviews].slice(0, 5),
         }));
       } else {
         if (productForm.images.length >= 8) {
-          toast.error('Tối đa chỉ được tải lên 8 ảnh sản phẩm!');
+          toast.error("Tối đa chỉ được tải lên 8 ảnh sản phẩm!");
           return;
         }
-        const newPreviews = filesArray.map(file => URL.createObjectURL(file));
-        setProductForm(prev => ({
+        const newPreviews = filesArray.map((file) => URL.createObjectURL(file));
+        setProductForm((prev) => ({
           ...prev,
           images: [...prev.images, ...filesArray].slice(0, 8),
-          imagePreviews: [...prev.imagePreviews, ...newPreviews].slice(0, 8)
+          imagePreviews: [...prev.imagePreviews, ...newPreviews].slice(0, 8),
         }));
       }
 
       // Reset input để có thể chọn lại cùng file
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
   const removeImage = (indexToRemove, type) => {
-    if (type === 'supply') {
+    if (type === "supply") {
       URL.revokeObjectURL(supplyForm.imagePreviews[indexToRemove]);
-      setSupplyForm(prev => ({
+      setSupplyForm((prev) => ({
         ...prev,
         images: prev.images.filter((_, idx) => idx !== indexToRemove),
-        imagePreviews: prev.imagePreviews.filter((_, idx) => idx !== indexToRemove)
+        imagePreviews: prev.imagePreviews.filter(
+          (_, idx) => idx !== indexToRemove,
+        ),
       }));
     } else {
       URL.revokeObjectURL(productForm.imagePreviews[indexToRemove]);
-      setProductForm(prev => ({
+      setProductForm((prev) => ({
         ...prev,
         images: prev.images.filter((_, idx) => idx !== indexToRemove),
-        imagePreviews: prev.imagePreviews.filter((_, idx) => idx !== indexToRemove)
+        imagePreviews: prev.imagePreviews.filter(
+          (_, idx) => idx !== indexToRemove,
+        ),
       }));
     }
-    toast.success('Đã xóa ảnh');
+    toast.success("Đã xóa ảnh");
   };
 
   return (
@@ -260,46 +343,57 @@ export function SellerCenterPage({ onNavigate }) {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#0A2647' }}>Seller Center</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: "#0A2647" }}>
+            Seller Center
+          </h1>
           <p className="text-gray-600">
             Quản lý và đăng bán sản lượng, sản phẩm hải sản của bạn
           </p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-t-lg shadow-sm border-b" style={{ borderColor: '#e5e7eb' }}>
+        <div
+          className="bg-white rounded-t-lg shadow-sm border-b"
+          style={{ borderColor: "#e5e7eb" }}
+        >
           <div className="flex">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => setActiveTab("overview")}
               className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2 cursor-pointer"
               style={{
-                borderBottomColor: activeTab === 'overview' ? '#00BCD4' : 'transparent',
-                color: activeTab === 'overview' ? '#00BCD4' : '#6B7280',
-                backgroundColor: activeTab === 'overview' ? '#F0F9FF' : 'transparent'
+                borderBottomColor:
+                  activeTab === "overview" ? "#00BCD4" : "transparent",
+                color: activeTab === "overview" ? "#00BCD4" : "#6B7280",
+                backgroundColor:
+                  activeTab === "overview" ? "#F0F9FF" : "transparent",
               }}
             >
               <BarChart3 className="w-5 h-5" />
               <span className="font-medium">Tổng quan</span>
             </button>
             <button
-              onClick={() => setActiveTab('supply')}
+              onClick={() => setActiveTab("supply")}
               className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2 cursor-pointer"
               style={{
-                borderBottomColor: activeTab === 'supply' ? '#00BCD4' : 'transparent',
-                color: activeTab === 'supply' ? '#00BCD4' : '#6B7280',
-                backgroundColor: activeTab === 'supply' ? '#F0F9FF' : 'transparent'
+                borderBottomColor:
+                  activeTab === "supply" ? "#00BCD4" : "transparent",
+                color: activeTab === "supply" ? "#00BCD4" : "#6B7280",
+                backgroundColor:
+                  activeTab === "supply" ? "#F0F9FF" : "transparent",
               }}
             >
               <Package className="w-5 h-5" />
               <span className="font-medium">Đăng bán sản lượng</span>
             </button>
             <button
-              onClick={() => setActiveTab('product')}
+              onClick={() => setActiveTab("product")}
               className="flex-1 px-6 py-4 flex items-center justify-center gap-2 transition-colors border-b-2 cursor-pointer"
               style={{
-                borderBottomColor: activeTab === 'product' ? '#00BCD4' : 'transparent',
-                color: activeTab === 'product' ? '#00BCD4' : '#6B7280',
-                backgroundColor: activeTab === 'product' ? '#F0F9FF' : 'transparent'
+                borderBottomColor:
+                  activeTab === "product" ? "#00BCD4" : "transparent",
+                color: activeTab === "product" ? "#00BCD4" : "#6B7280",
+                backgroundColor:
+                  activeTab === "product" ? "#F0F9FF" : "transparent",
               }}
             >
               <Fish className="w-5 h-5" />
@@ -310,79 +404,178 @@ export function SellerCenterPage({ onNavigate }) {
 
         {/* Tab Content */}
         <div className="bg-white rounded-b-lg shadow-sm p-8">
-          {activeTab === 'overview' ? (
+          {activeTab === "overview" ? (
             <div className="space-y-8">
-              <h2 className="text-xl font-bold" style={{ color: '#0A2647' }}>Seller Overview</h2>
+              <h2 className="text-xl font-bold" style={{ color: "#0A2647" }}>
+                Seller Overview
+              </h2>
 
               {/* Statistics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6 border" style={{ borderColor: '#E0F7FA' }}>
+                <div
+                  className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6 border"
+                  style={{ borderColor: "#E0F7FA" }}
+                >
                   <p className="text-sm text-gray-600 mb-2">Tổng bài đăng</p>
-                  <p className="text-3xl font-bold mb-2" style={{ color: '#0A2647' }}>{stats.totalListings}</p>
+                  {loadingStats ? (
+                    <Loader2 className="w-6 h-6 animate-spin my-1" style={{ color: "#0A2647" }} />
+                  ) : (
+                    <p
+                      className="text-3xl font-bold mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      {stats.totalListings}
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500">Tất cả bài đăng</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-6 border" style={{ borderColor: '#FEF3C7' }}>
+                <div
+                  className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-6 border"
+                  style={{ borderColor: "#FEF3C7" }}
+                >
                   <p className="text-sm text-gray-600 mb-2">Chờ duyệt</p>
-                  <p className="text-3xl font-bold mb-2" style={{ color: '#D97706' }}>{stats.pendingListings}</p>
-                  <p className="text-xs text-gray-500">Đang chờ admin xét duyệt</p>
+                  {loadingStats ? (
+                    <Loader2 className="w-6 h-6 animate-spin my-1" style={{ color: "#D97706" }} />
+                  ) : (
+                    <p
+                      className="text-3xl font-bold mb-2"
+                      style={{ color: "#D97706" }}
+                    >
+                      {stats.pendingListings}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Đang chờ admin xét duyệt
+                  </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border" style={{ borderColor: '#D1FAE5' }}>
+                <div
+                  className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border"
+                  style={{ borderColor: "#D1FAE5" }}
+                >
                   <p className="text-sm text-gray-600 mb-2">Đã duyệt</p>
-                  <p className="text-3xl font-bold mb-2" style={{ color: '#059669' }}>{stats.approvedListings}</p>
-                  <p className="text-xs text-gray-500">Đang hiển thị công khai</p>
+                  {loadingStats ? (
+                    <Loader2 className="w-6 h-6 animate-spin my-1" style={{ color: "#059669" }} />
+                  ) : (
+                    <p
+                      className="text-3xl font-bold mb-2"
+                      style={{ color: "#059669" }}
+                    >
+                      {stats.approvedListings}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Đang hiển thị công khai
+                  </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-6 border" style={{ borderColor: '#FEE2E2' }}>
+                <div
+                  className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-6 border"
+                  style={{ borderColor: "#FEE2E2" }}
+                >
                   <p className="text-sm text-gray-600 mb-2">Từ chối</p>
-                  <p className="text-3xl font-bold mb-2" style={{ color: '#DC2626' }}>{stats.rejectedListings}</p>
+                  {loadingStats ? (
+                    <Loader2 className="w-6 h-6 animate-spin my-1" style={{ color: "#DC2626" }} />
+                  ) : (
+                    <p
+                      className="text-3xl font-bold mb-2"
+                      style={{ color: "#DC2626" }}
+                    >
+                      {stats.rejectedListings}
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500">Cần chỉnh sửa</p>
                 </div>
               </div>
 
               {/* Quick Actions */}
               <div>
-                <h3 className="text-lg font-bold mb-4" style={{ color: '#0A2647' }}>Hành động nhanh</h3>
+                <h3
+                  className="text-lg font-bold mb-4"
+                  style={{ color: "#0A2647" }}
+                >
+                  Hành động nhanh
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <button
-                    onClick={() => setActiveTab('supply')}
+                    onClick={() => setActiveTab("supply")}
                     className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
-                    style={{ borderColor: '#00BCD4' }}
+                    style={{ borderColor: "#00BCD4" }}
                   >
-                    <Package className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
-                    <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Đăng sản lượng mới</h4>
-                    <p className="text-sm text-gray-600">Đăng bán sản lượng hải sản từ ao nuôi</p>
+                    <Package
+                      className="w-8 h-8 mb-3"
+                      style={{ color: "#00BCD4" }}
+                    />
+                    <h4
+                      className="font-semibold mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Đăng sản lượng mới
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Đăng bán sản lượng hải sản từ ao nuôi
+                    </p>
                   </button>
 
                   <button
-                    onClick={() => setActiveTab('product')}
+                    onClick={() => setActiveTab("product")}
                     className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
-                    style={{ borderColor: '#00BCD4' }}
+                    style={{ borderColor: "#00BCD4" }}
                   >
-                    <Fish className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
-                    <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Đăng sản phẩm mới</h4>
-                    <p className="text-sm text-gray-600">Đăng bán sản phẩm hải sản đã chế biến</p>
+                    <Fish
+                      className="w-8 h-8 mb-3"
+                      style={{ color: "#00BCD4" }}
+                    />
+                    <h4
+                      className="font-semibold mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Đăng sản phẩm mới
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Đăng bán sản phẩm hải sản đã chế biến
+                    </p>
                   </button>
 
                   <button
-                    onClick={() => onNavigate('dashboard')}
+                    onClick={() => onNavigate("dashboard")}
                     className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
-                    style={{ borderColor: '#00BCD4' }}
+                    style={{ borderColor: "#00BCD4" }}
                   >
-                    <Package className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
-                    <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Quản lý đơn hàng</h4>
-                    <p className="text-sm text-gray-600">Duyệt & xử lý đơn hàng từ người mua</p>
+                    <Package
+                      className="w-8 h-8 mb-3"
+                      style={{ color: "#00BCD4" }}
+                    />
+                    <h4
+                      className="font-semibold mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Quản lý đơn hàng
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Duyệt & xử lý đơn hàng từ người mua
+                    </p>
                   </button>
 
                   <button
-                    onClick={() => onNavigate('listing-management')}
+                    onClick={() => onNavigate("listing-management")}
                     className="p-6 border-2 border-dashed rounded-lg hover:bg-blue-50 transition-colors text-left cursor-pointer"
-                    style={{ borderColor: '#00BCD4' }}
+                    style={{ borderColor: "#00BCD4" }}
                   >
-                    <BarChart3 className="w-8 h-8 mb-3" style={{ color: '#00BCD4' }} />
-                    <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Quản lý bài đăng</h4>
-                    <p className="text-sm text-gray-600">Xem và quản lý tất cả bài đăng</p>
+                    <BarChart3
+                      className="w-8 h-8 mb-3"
+                      style={{ color: "#00BCD4" }}
+                    />
+                    <h4
+                      className="font-semibold mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Quản lý bài đăng
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Xem và quản lý tất cả bài đăng
+                    </p>
                   </button>
                 </div>
               </div>
@@ -390,60 +583,101 @@ export function SellerCenterPage({ onNavigate }) {
               {/* Information Notice */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <div className="flex gap-4">
-                  <AlertCircle className="w-6 h-6 flex-shrink-0" style={{ color: '#00BCD4' }} />
+                  <AlertCircle
+                    className="w-6 h-6 flex-shrink-0"
+                    style={{ color: "#00BCD4" }}
+                  />
                   <div>
-                    <h4 className="font-semibold mb-2" style={{ color: '#0A2647' }}>Lưu ý quan trọng</h4>
+                    <h4
+                      className="font-semibold mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Lưu ý quan trọng
+                    </h4>
                     <ul className="text-sm text-gray-700 space-y-2">
-                      <li>• Tất cả bài đăng phải được Admin phê duyệt trước khi hiển thị công khai</li>
-                      <li>• Bài đăng được phê duyệt sẽ xuất hiện trên Trang chủ, Marketplace và Kết quả tìm kiếm</li>
-                      <li>• Hãy cung cấp đầy đủ thông tin và hình ảnh chất lượng để tăng tỷ lệ phê duyệt</li>
-                      <li>• Nếu bài đăng bị từ chối, bạn có thể chỉnh sửa và gửi lại để xét duyệt</li>
+                      <li>
+                        • Tất cả bài đăng phải được Admin phê duyệt trước khi
+                        hiển thị công khai
+                      </li>
+                      <li>
+                        • Bài đăng được phê duyệt sẽ xuất hiện trên Trang chủ,
+                        Marketplace và Kết quả tìm kiếm
+                      </li>
+                      <li>
+                        • Hãy cung cấp đầy đủ thông tin và hình ảnh chất lượng
+                        để tăng tỷ lệ phê duyệt
+                      </li>
+                      <li>
+                        • Nếu bài đăng bị từ chối, bạn có thể chỉnh sửa và gửi
+                        lại để xét duyệt
+                      </li>
                     </ul>
                   </div>
                 </div>
               </div>
             </div>
-          ) : activeTab === 'supply' ? (
+          ) : activeTab === "supply" ? (
             // Supply Form — connected to POST /api/Products
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: '#0A2647' }}>Đăng bán sản lượng</h2>
-                <p className="text-gray-600 mt-2">Đăng thông tin sản lượng hải sản từ ao nuôi của bạn</p>
+                <h2 className="text-2xl font-bold" style={{ color: "#0A2647" }}>
+                  Đăng bán sản lượng
+                </h2>
+                <p className="text-gray-600 mt-2">
+                  Đăng thông tin sản lượng hải sản từ ao nuôi của bạn
+                </p>
               </div>
 
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Loại hải sản <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={supplyForm.seafoodType}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, seafoodType: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({
+                          ...supplyForm,
+                          seafoodType: e.target.value,
+                        })
+                      }
+                      placeholder="Nhập tên loại hải sản (ví dụ: Tôm sú, Tôm thẻ...)"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
-                    >
-                      <option value="">Chọn loại hải sản</option>
-                      {seafoodTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                      style={{ borderColor: "#e5e7eb" }}
+                    />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Danh mục <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={supplyForm.categoryId}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, categoryId: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({
+                          ...supplyForm,
+                          categoryId: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                       disabled={loadingCategories}
                     >
-                      <option value="">{loadingCategories ? 'Đang tải...' : 'Chọn danh mục'}</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option value="">
+                        {loadingCategories ? "Đang tải..." : "Chọn danh mục"}
+                      </option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -451,103 +685,156 @@ export function SellerCenterPage({ onNavigate }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Size <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={supplyForm.size}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, size: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({ ...supplyForm, size: e.target.value })
+                      }
                       placeholder="VD: 20-25 con/kg"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
-                      Tổng sản lượng (kg) <span className="text-red-500">*</span>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Tổng sản lượng (kg){" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={supplyForm.quantity}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, quantity: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({
+                          ...supplyForm,
+                          quantity: e.target.value,
+                        })
+                      }
                       placeholder="VD: 5000"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Mua tối thiểu (kg)
                     </label>
                     <input
                       type="number"
                       value={supplyForm.minOrderQuantity}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, minOrderQuantity: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({
+                          ...supplyForm,
+                          minOrderQuantity: e.target.value,
+                        })
+                      }
                       placeholder="Mặc định: 1 kg"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Ngày thu hoạch <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
                       value={supplyForm.harvestDate}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, harvestDate: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({
+                          ...supplyForm,
+                          harvestDate: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
-                      Giá đề xuất (VNĐ/kg) <span className="text-red-500">*</span>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Giá đề xuất (VNĐ/kg){" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={supplyForm.proposedPrice}
-                      onChange={(e) => setSupplyForm({ ...supplyForm, proposedPrice: e.target.value })}
+                      onChange={(e) =>
+                        setSupplyForm({
+                          ...supplyForm,
+                          proposedPrice: e.target.value,
+                        })
+                      }
                       placeholder="Nhập giá đề xuất"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{ color: "#0A2647" }}
+                  >
                     Địa điểm nuôi <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={supplyForm.location}
-                    onChange={(e) => setSupplyForm({ ...supplyForm, location: e.target.value })}
+                    onChange={(e) =>
+                      setSupplyForm({ ...supplyForm, location: e.target.value })
+                    }
                     placeholder="VD: Cà Mau"
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                    style={{ borderColor: '#e5e7eb' }}
+                    style={{ borderColor: "#e5e7eb" }}
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{ color: "#0A2647" }}
+                  >
                     Chứng nhận
                   </label>
                   <div className="flex flex-wrap gap-3">
-                    {certificationOptions.map(cert => (
+                    {certificationOptions.map((cert) => (
                       <label
                         key={cert}
                         className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
                         style={{
-                          borderColor: supplyForm.certifications.includes(cert) ? '#00BCD4' : '#e5e7eb',
-                          backgroundColor: supplyForm.certifications.includes(cert) ? '#E0F7FA' : 'white'
+                          borderColor: supplyForm.certifications.includes(cert)
+                            ? "#00BCD4"
+                            : "#e5e7eb",
+                          backgroundColor: supplyForm.certifications.includes(
+                            cert,
+                          )
+                            ? "#E0F7FA"
+                            : "white",
                         }}
                       >
                         <input
@@ -563,7 +850,10 @@ export function SellerCenterPage({ onNavigate }) {
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{ color: "#0A2647" }}
+                  >
                     Hình ảnh <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -572,26 +862,37 @@ export function SellerCenterPage({ onNavigate }) {
                     accept="image/*"
                     ref={supplyImageRef}
                     className="hidden"
-                    onChange={(e) => handleFileChange(e, 'supply')}
+                    onChange={(e) => handleFileChange(e, "supply")}
                   />
                   <div
                     onClick={() => supplyImageRef.current?.click()}
                     className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors mb-4"
-                    style={{ borderColor: '#e5e7eb' }}
+                    style={{ borderColor: "#e5e7eb" }}
                   >
                     <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-600 mb-1">Nhấp để tải lên hoặc kéo thả</p>
-                    <p className="text-sm text-gray-400">PNG, JPG tối đa 10MB (Tối đa 5 ảnh)</p>
+                    <p className="text-gray-600 mb-1">
+                      Nhấp để tải lên hoặc kéo thả
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      PNG, JPG tối đa 10MB (Tối đa 5 ảnh)
+                    </p>
                   </div>
 
                   {supplyForm.imagePreviews.length > 0 && (
                     <div className="grid grid-cols-5 gap-4">
                       {supplyForm.imagePreviews.map((img, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden border">
-                          <img src={img} alt="preview" className="w-full h-full object-cover" />
+                        <div
+                          key={idx}
+                          className="relative aspect-square rounded-md overflow-hidden border"
+                        >
+                          <img
+                            src={img}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                          />
                           <button
                             type="button"
-                            onClick={() => removeImage(idx, 'supply')}
+                            onClick={() => removeImage(idx, "supply")}
                             className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 cursor-pointer"
                           >
                             <X className="w-3 h-3" />
@@ -603,41 +904,50 @@ export function SellerCenterPage({ onNavigate }) {
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{ color: "#0A2647" }}
+                  >
                     Mô tả <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={supplyForm.description}
-                    onChange={(e) => setSupplyForm({ ...supplyForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setSupplyForm({
+                        ...supplyForm,
+                        description: e.target.value,
+                      })
+                    }
                     placeholder="Mô tả chi tiết về sản lượng hải sản của bạn"
                     rows={5}
                     className="w-full px-4 py-2 border rounded-md resize-none focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                    style={{ borderColor: '#e5e7eb' }}
+                    style={{ borderColor: "#e5e7eb" }}
                   />
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>Lưu ý:</strong> Bài đăng của bạn sẽ được gửi đến Admin để xét duyệt.
-                    Sau khi được phê duyệt, sản lượng sẽ hiển thị công khai trên trang "Tìm nguồn hải sản".
+                    <strong>Lưu ý:</strong> Bài đăng của bạn sẽ được gửi đến
+                    Admin để xét duyệt. Sau khi được phê duyệt, sản lượng sẽ
+                    hiển thị công khai trên trang "Tìm nguồn hải sản".
                   </p>
                 </div>
 
                 <div className="flex gap-4">
                   <button
-                    onClick={() => handleSaveDraft('supply')}
+                    onClick={() => handleSaveDraft("supply")}
                     disabled={isSubmitting}
                     className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    style={{ borderColor: '#0A2647', color: '#0A2647' }}
+                    style={{ borderColor: "#0A2647", color: "#0A2647" }}
                   >
                     <Save className="w-5 h-5" />
                     Lưu nháp
                   </button>
                   <button
-                    onClick={() => handleSubmitForApproval('supply')}
+                    onClick={() => handleSubmitForApproval("supply")}
                     disabled={isSubmitting}
                     className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    style={{ backgroundColor: '#00BCD4' }}
+                    style={{ backgroundColor: "#00BCD4" }}
                   >
                     {isSubmitting ? (
                       <>
@@ -658,40 +968,64 @@ export function SellerCenterPage({ onNavigate }) {
             // Product Form — connected to POST /api/Products
             <div className="max-w-3xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: '#0A2647' }}>Đăng bán sản phẩm</h2>
-                <p className="text-gray-600 mt-2">Đăng bán sản phẩm hải sản để bán lẻ</p>
+                <h2 className="text-2xl font-bold" style={{ color: "#0A2647" }}>
+                  Đăng bán sản phẩm
+                </h2>
+                <p className="text-gray-600 mt-2">
+                  Đăng bán sản phẩm hải sản để bán lẻ
+                </p>
               </div>
 
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Tên sản phẩm <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={productForm.productName}
-                      onChange={(e) => setProductForm({ ...productForm, productName: e.target.value })}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          productName: e.target.value,
+                        })
+                      }
                       placeholder="VD: Tôm sú tươi size 20-25"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Danh mục <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={productForm.categoryId}
-                      onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          categoryId: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                       disabled={loadingCategories}
                     >
-                      <option value="">{loadingCategories ? 'Đang tải...' : 'Chọn danh mục'}</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option value="">
+                        {loadingCategories ? "Đang tải..." : "Chọn danh mục"}
+                      </option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -699,52 +1033,78 @@ export function SellerCenterPage({ onNavigate }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Giá bán (VNĐ) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={productForm.price}
-                      onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          price: e.target.value,
+                        })
+                      }
                       placeholder="Nhập giá bán"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Tồn kho <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
                       value={productForm.stock}
-                      onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                      onChange={(e) =>
+                        setProductForm({
+                          ...productForm,
+                          stock: e.target.value,
+                        })
+                      }
                       placeholder="Số lượng"
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                    <label
+                      className="block font-medium mb-2"
+                      style={{ color: "#0A2647" }}
+                    >
                       Đơn vị tính <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={productForm.unit}
-                      onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, unit: e.target.value })
+                      }
                       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                      style={{ borderColor: '#e5e7eb' }}
+                      style={{ borderColor: "#e5e7eb" }}
                     >
-                      {unitOptions.map(unit => (
-                        <option key={unit} value={unit}>{unit}</option>
+                      {unitOptions.map((unit) => (
+                        <option key={unit} value={unit}>
+                          {unit}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{ color: "#0A2647" }}
+                  >
                     Hình ảnh sản phẩm <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -753,26 +1113,37 @@ export function SellerCenterPage({ onNavigate }) {
                     accept="image/*"
                     ref={productImageRef}
                     className="hidden"
-                    onChange={(e) => handleFileChange(e, 'product')}
+                    onChange={(e) => handleFileChange(e, "product")}
                   />
                   <div
                     onClick={() => productImageRef.current?.click()}
                     className="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 cursor-pointer transition-colors mb-4"
-                    style={{ borderColor: '#e5e7eb' }}
+                    style={{ borderColor: "#e5e7eb" }}
                   >
                     <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-600 mb-1">Nhấp để tải lên hoặc kéo thả</p>
-                    <p className="text-sm text-gray-400">PNG, JPG tối đa 10MB (Tối đa 8 ảnh)</p>
+                    <p className="text-gray-600 mb-1">
+                      Nhấp để tải lên hoặc kéo thả
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      PNG, JPG tối đa 10MB (Tối đa 8 ảnh)
+                    </p>
                   </div>
 
                   {productForm.imagePreviews.length > 0 && (
                     <div className="grid grid-cols-4 gap-4">
                       {productForm.imagePreviews.map((img, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden border">
-                          <img src={img} alt="preview" className="w-full h-full object-cover" />
+                        <div
+                          key={idx}
+                          className="relative aspect-square rounded-md overflow-hidden border"
+                        >
+                          <img
+                            src={img}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                          />
                           <button
                             type="button"
-                            onClick={() => removeImage(idx, 'product')}
+                            onClick={() => removeImage(idx, "product")}
                             className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 cursor-pointer"
                           >
                             <X className="w-3 h-3" />
@@ -784,41 +1155,51 @@ export function SellerCenterPage({ onNavigate }) {
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-2" style={{ color: '#0A2647' }}>
+                  <label
+                    className="block font-medium mb-2"
+                    style={{ color: "#0A2647" }}
+                  >
                     Mô tả sản phẩm <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={productForm.description}
-                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        description: e.target.value,
+                      })
+                    }
                     placeholder="Mô tả chi tiết về sản phẩm hải sản của bạn"
                     rows={5}
                     className="w-full px-4 py-2 border rounded-md resize-none focus:outline-none focus:ring-1 focus:ring-[#00BCD4]"
-                    style={{ borderColor: '#e5e7eb' }}
+                    style={{ borderColor: "#e5e7eb" }}
                   />
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>Lưu ý:</strong> Sản phẩm của bạn sẽ được gửi đến Admin để xét duyệt.
-                    Sau khi được phê duyệt, sản phẩm sẽ hiển thị trên trang "Mua lẻ", "Trang chủ" và có thể được tìm kiếm.
+                    <strong>Lưu ý:</strong> Sản phẩm của bạn sẽ được gửi đến
+                    Admin để xét duyệt. Sau khi được phê duyệt, sản phẩm sẽ hiển
+                    thị trên trang "Mua lẻ", "Trang chủ" và có thể được tìm
+                    kiếm.
                   </p>
                 </div>
 
                 <div className="flex gap-4">
                   <button
-                    onClick={() => handleSaveDraft('product')}
+                    onClick={() => handleSaveDraft("product")}
                     disabled={isSubmitting}
                     className="flex-1 px-6 py-3 border rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    style={{ borderColor: '#0A2647', color: '#0A2647' }}
+                    style={{ borderColor: "#0A2647", color: "#0A2647" }}
                   >
                     <Save className="w-5 h-5" />
                     Lưu nháp
                   </button>
                   <button
-                    onClick={() => handleSubmitForApproval('product')}
+                    onClick={() => handleSubmitForApproval("product")}
                     disabled={isSubmitting}
                     className="flex-1 px-6 py-3 rounded-md text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    style={{ backgroundColor: '#00BCD4' }}
+                    style={{ backgroundColor: "#00BCD4" }}
                   >
                     {isSubmitting ? (
                       <>

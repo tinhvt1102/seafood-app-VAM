@@ -67,7 +67,10 @@ export function FarmProfilePage({ farmId, onNavigate, onAddToCart }) {
     rating: 5,
     reviews: products.length > 0 ? products.length * 4 : 12,
     verified: farmData.status === 'APPROVED' || farmData.status === 'approved',
-    certifications: farmData.certificate ? [farmData.certificate.endsWith('.pdf') ? 'Giấy chứng nhận (PDF)' : farmData.certificate] : ['VietGAP'],
+    certifications: farmData.certificate
+      ? (farmData.certificate.startsWith('http') || farmData.certificate.includes('firebase') ? ['Đã xác minh chứng nhận'] : [farmData.certificate])
+      : ['VietGAP'],
+    certificateUrl: farmData.certificate && (farmData.certificate.startsWith('http') || farmData.certificate.includes('firebase')) ? farmData.certificate : null,
     description: farmData.note || `Trang trại chuyên nuôi trồng các loại hải sản chất lượng cao (${farmData.aquacultureType || 'Hải sản tươi sống'}).`,
     phone: sellerInfo.phone || 'Chưa cập nhật',
     email: sellerInfo.email || 'Chưa cập nhật',
@@ -170,7 +173,7 @@ export function FarmProfilePage({ farmId, onNavigate, onAddToCart }) {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
+                <div className="flex flex-wrap gap-2 items-center justify-center md:justify-start mb-4">
                   {farm.certifications.map((cert, index) => (
                     <span 
                       key={index}
@@ -179,6 +182,16 @@ export function FarmProfilePage({ farmId, onNavigate, onAddToCart }) {
                       {cert}
                     </span>
                   ))}
+                  {farm.certificateUrl && (
+                    <a
+                      href={farm.certificateUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 rounded-full text-xs font-bold text-[#00BCD4] bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 transition-colors"
+                    >
+                      📄 Xem file chứng nhận
+                    </a>
+                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
