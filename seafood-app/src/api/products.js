@@ -35,6 +35,7 @@ export const productApi = {
     if (filter.pageSize) params.append('pageSize', filter.pageSize);
     if (filter.search) params.append('search', filter.search);
     if (filter.status) params.append('status', filter.status);
+    if (filter.isWholesale !== undefined && filter.isWholesale !== null) params.append('isWholesale', filter.isWholesale);
     const query = params.toString();
     return apiClient.get(`${ENDPOINTS.PRODUCTS.LIST}/my-products${query ? `?${query}` : ''}`);
   },

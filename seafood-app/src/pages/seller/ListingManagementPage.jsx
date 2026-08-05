@@ -37,7 +37,7 @@ export function ListingManagementPage({ onNavigate }) {
       } else if (wholesale === 'retail') {
         filter.isWholesale = false;
       }
-      const data = await productApi.getProducts(filter);
+      const data = await productApi.getMyProducts(filter);
 
       // API trả về { items: [...], totalCount, pageNumber, pageSize } hoặc mảng
       const items = data?.items || data || [];
@@ -60,16 +60,16 @@ export function ListingManagementPage({ onNavigate }) {
   const fetchStats = async () => {
     try {
       const [allData, pendingData, approvedData, rejectedData] = await Promise.all([
-        productApi.getProducts({ pageSize: 1 }),
-        productApi.getProducts({ pageSize: 1, status: 'pending' }),
-        productApi.getProducts({ pageSize: 1, status: 'approved' }),
-        productApi.getProducts({ pageSize: 1, status: 'rejected' }),
+        productApi.getMyProducts({ pageSize: 1 }),
+        productApi.getMyProducts({ pageSize: 1, status: 'pending' }),
+        productApi.getMyProducts({ pageSize: 1, status: 'approved' }),
+        productApi.getMyProducts({ pageSize: 1, status: 'rejected' }),
       ]);
       setStats({
-        total: allData?.totalCount || 0,
-        pending: pendingData?.totalCount || 0,
-        approved: approvedData?.totalCount || 0,
-        rejected: rejectedData?.totalCount || 0,
+        total: allData?.totalCount || (Array.isArray(allData) ? allData.length : 0),
+        pending: pendingData?.totalCount || (Array.isArray(pendingData) ? pendingData.length : 0),
+        approved: approvedData?.totalCount || (Array.isArray(approvedData) ? approvedData.length : 0),
+        rejected: rejectedData?.totalCount || (Array.isArray(rejectedData) ? rejectedData.length : 0),
       });
     } catch {
       // Stats không quan trọng, bỏ qua lỗi
@@ -77,7 +77,6 @@ export function ListingManagementPage({ onNavigate }) {
   };
 
   useEffect(() => {
-    fetchListings(1, statusFilter, wholesaleFilter);
     fetchStats();
   }, []);
 
