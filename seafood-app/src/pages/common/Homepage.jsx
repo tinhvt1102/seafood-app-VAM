@@ -1,15 +1,19 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Search, TrendingUp, Users, Truck, X } from 'lucide-react';
-import { CategoryCard } from '../../components/CategoryCard';
-import { ProductCard } from '../../components/ProductCard';
-import { SupplierCard } from '../../components/SupplierCard';
-import { SupplyCard } from '../../components/SupplyCard';
+import { useState, useEffect, useMemo } from "react";
+import { Search, TrendingUp, Users, Truck, X } from "lucide-react";
+import { CategoryCard } from "../../components/CategoryCard";
+import { ProductCard } from "../../components/ProductCard";
+import { SupplierCard } from "../../components/SupplierCard";
+import { SupplyCard } from "../../components/SupplyCard";
 
-import { productApi, categoryApi } from '../../api/products';
+import { productApi, categoryApi } from "../../api/products";
 
-export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) {
+export function Homepage({
+  onNavigate,
+  onAddToCart,
+  products: passedProducts,
+}) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [apiProducts, setApiProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +24,7 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
         const res = await categoryApi.getCategories();
         setCategories(res?.items || res || []);
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
+        console.error("Failed to fetch categories:", err);
       }
     };
     fetchCategories();
@@ -28,20 +32,22 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
 
   const banners = [
     {
-      image: 'https://i.postimg.cc/fLfZBbXS/co-phai-dai-duong-dang-can-kiet-ca-bien.jpg',
-      title: 'Kết nối người nuôi – doanh nghiệp – thị trường hải sản Việt Nam',
-      subtitle: 'Nền tảng thương mại hải sản hàng đầu'
+      image:
+        "https://i.postimg.cc/fLfZBbXS/co-phai-dai-duong-dang-can-kiet-ca-bien.jpg",
+      title: "Kết nối người nuôi – doanh nghiệp – thị trường hải sản Việt Nam",
+      subtitle: "Nền tảng thương mại hải sản hàng đầu",
     },
     {
-      image: 'https://images.unsplash.com/photo-1551244072-5d12893278ab?q=80&w=2000',
-      title: 'Nguồn cung hải sản tươi sống chất lượng',
-      subtitle: 'Trực tiếp từ hộ nuôi'
+      image:
+        "https://images.unsplash.com/photo-1551244072-5d12893278ab?q=80&w=2000",
+      title: "Nguồn cung hải sản tươi sống chất lượng",
+      subtitle: "Trực tiếp từ hộ nuôi",
     },
     {
-      image: 'https://i.postimg.cc/Y2gkXbNj/ca-(3)-1683342306.jpg',
-      title: 'Giao dịch minh bạch - An toàn - Hiệu quả',
-      subtitle: 'Đăng ký ngay hôm nay'
-    }
+      image: "https://i.postimg.cc/Y2gkXbNj/ca-(3)-1683342306.jpg",
+      title: "Giao dịch minh bạch - An toàn - Hiệu quả",
+      subtitle: "Đăng ký ngay hôm nay",
+    },
   ];
 
   useEffect(() => {
@@ -61,22 +67,32 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await productApi.getProducts({ pageSize: 100, status: 'approved' });
+        const res = await productApi.getProducts({
+          pageSize: 100,
+          status: "approved",
+        });
         const items = res?.items || res || [];
-        const mapped = items.map(item => ({
+        const mapped = items.map((item) => ({
           id: String(item.id),
           name: item.name,
-          image: item.imageUrls?.[0] || item.image || item.imageUrl || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
-          price: typeof item.price === 'number' ? `${item.price.toLocaleString('vi-VN')}đ/kg` : item.price,
-          origin: item.origin || 'Việt Nam',
+          image:
+            item.imageUrls?.[0] ||
+            item.image ||
+            item.imageUrl ||
+            "https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080",
+          price:
+            typeof item.price === "number"
+              ? `${item.price.toLocaleString("vi-VN")}đ/kg`
+              : item.price,
+          origin: item.origin || "Việt Nam",
           rating: item.rating || 5,
           reviews: item.reviews || 0,
           isWholesale: Boolean(item.isWholesale || item.isWholeSale),
-          description: item.description || ''
+          description: item.description || "",
         }));
         setApiProducts(mapped);
       } catch (err) {
-        console.error('Lỗi khi tải sản phẩm cho Trang Chủ từ API:', err);
+        console.error("Lỗi khi tải sản phẩm cho Trang Chủ từ API:", err);
       } finally {
         setLoading(false);
       }
@@ -93,38 +109,42 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
       try {
         const res = await productApi.getProducts({
           isWholesale: true,
-          status: 'approved',
-          pageSize: 20
+          status: "approved",
+          pageSize: 20,
         });
         const items = res?.items || res || [];
         const mapped = items.map((item) => ({
           id: String(item.id),
           species: item.name,
-          image: item.imageUrls?.[0] || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
-          size: 'Tuyển chọn chất lượng cao',
-          harvestTime: 'Tươi sống mỗi ngày',
-          quantity: `${item.quantity.toLocaleString('vi-VN')} ${item.unit || 'kg'}`,
-          location: item.farmName || 'Việt Nam',
-          farmerName: item.sellerName || 'Hộ nuôi thủy sản'
+          image:
+            item.imageUrls?.[0] ||
+            "https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080",
+          size: "Tuyển chọn chất lượng cao",
+          harvestTime: "Tươi sống mỗi ngày",
+          quantity: `${item.quantity.toLocaleString("vi-VN")} ${item.unit || "kg"}`,
+          location: item.farmName || "Việt Nam",
+          farmerName: item.sellerName || "Hộ nuôi thủy sản",
         }));
         setSupplyProducts(mapped);
       } catch (err) {
-        console.error('Lỗi khi tải sản lượng nổi bật:', err);
+        console.error("Lỗi khi tải sản lượng nổi bật:", err);
       }
     };
     fetchWholesaleProducts();
   }, []);
 
-  const filteredSupply = supplyProducts.filter(item =>
-    item.species.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.location.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSupply = supplyProducts.filter(
+    (item) =>
+      item.species.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const filteredRetail = apiProducts.filter(item =>
-    !item.isWholesale &&
-    !item.isWholeSale &&
-    (item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     item.origin.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredRetail = apiProducts.filter(
+    (item) =>
+      !item.isWholesale &&
+      !item.isWholeSale &&
+      (item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.origin.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
@@ -134,8 +154,9 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
         {banners.map((banner, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-              }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
           >
             <div className="absolute inset-0 bg-black/30 z-20" />
             <img
@@ -145,11 +166,27 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
             />
             <div className="absolute inset-0 flex items-center justify-center z-30">
               <div className="text-center text-white px-4 max-w-4xl">
-                <h1 className="text-3xl md:text-5xl font-bold mb-4 drop-shadow-2xl">{banner.title}</h1>
-                <p className="text-lg md:text-xl mb-8 opacity-95 drop-shadow-lg">{banner.subtitle}</p>
+                <h1 className="text-3xl md:text-5xl font-bold mb-4 drop-shadow-2xl">
+                  {banner.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-8 opacity-95 drop-shadow-lg">
+                  {banner.subtitle}
+                </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button onClick={() => onNavigate('suppliers')} className="px-8 py-3 rounded-md text-white font-semibold hover:scale-105 transition-all shadow-xl active:scale-95" style={{ backgroundColor: '#0A2647' }}>Tìm nguồn hải sản</button>
-                  <button onClick={() => onNavigate('supply')} className="px-8 py-3 rounded-md text-white font-semibold hover:scale-105 transition-all shadow-xl active:scale-95" style={{ backgroundColor: '#00BCD4' }}>Đăng bán sản lượng</button>
+                  <button
+                    onClick={() => onNavigate("suppliers")}
+                    className="px-8 py-3 rounded-md text-white font-semibold hover:scale-105 transition-all shadow-xl active:scale-95"
+                    style={{ backgroundColor: "#0A2647" }}
+                  >
+                    Tìm nguồn hải sản
+                  </button>
+                  <button
+                    onClick={() => onNavigate("supply")}
+                    className="px-8 py-3 rounded-md text-white font-semibold hover:scale-105 transition-all shadow-xl active:scale-95"
+                    style={{ backgroundColor: "#00BCD4" }}
+                  >
+                    Tìm nguồn sản lượng
+                  </button>
                 </div>
               </div>
             </div>
@@ -172,14 +209,17 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
               />
               {searchTerm && (
                 <button
-                  onClick={() => setSearchTerm('')}
+                  onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
                 >
                   <X className="w-4 h-4 text-gray-400" />
                 </button>
               )}
             </div>
-            <button className="px-10 py-4 rounded-lg text-white font-bold hover:brightness-110 transition-all shadow-lg" style={{ backgroundColor: '#0A2647' }}>
+            <button
+              className="px-10 py-4 rounded-lg text-white font-bold hover:brightness-110 transition-all shadow-lg"
+              style={{ backgroundColor: "#0A2647" }}
+            >
               Tìm kiếm
             </button>
           </div>
@@ -188,23 +228,39 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
 
       {/* Categories */}
       <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-center mb-8 text-2xl font-bold" style={{ color: '#0A2647' }}>Danh mục hải sản</h2>
+        <h2
+          className="text-center mb-8 text-2xl font-bold"
+          style={{ color: "#0A2647" }}
+        >
+          Danh mục hải sản
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-center">
           {categories.map((cat, idx) => {
-            let icon = '🐟';
-            const nameLower = cat.name?.toLowerCase() || '';
-            if (nameLower.includes('tôm')) icon = '🦐';
-            else if (nameLower.includes('cua') || nameLower.includes('ghẹ')) icon = '🦀';
-            else if (nameLower.includes('mực') || nameLower.includes('bạch tuộc')) icon = '🦑';
-            else if (nameLower.includes('ốc') || nameLower.includes('ngao') || nameLower.includes('sò') || nameLower.includes('hàu')) icon = '🦪';
-            else if (nameLower.includes('khác')) icon = '🦞';
-            
+            let icon = "🐟";
+            const nameLower = cat.name?.toLowerCase() || "";
+            if (nameLower.includes("tôm")) icon = "🦐";
+            else if (nameLower.includes("cua") || nameLower.includes("ghẹ"))
+              icon = "🦀";
+            else if (
+              nameLower.includes("mực") ||
+              nameLower.includes("bạch tuộc")
+            )
+              icon = "🦑";
+            else if (
+              nameLower.includes("ốc") ||
+              nameLower.includes("ngao") ||
+              nameLower.includes("sò") ||
+              nameLower.includes("hàu")
+            )
+              icon = "🦪";
+            else if (nameLower.includes("khác")) icon = "🦞";
+
             return (
-              <CategoryCard 
-                key={cat.id || idx} 
-                icon={icon} 
-                label={cat.name} 
-                onClick={() => onNavigate('retail')} 
+              <CategoryCard
+                key={cat.id || idx}
+                icon={icon}
+                label={cat.name}
+                onClick={() => onNavigate("retail")}
               />
             );
           })}
@@ -214,16 +270,28 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
       {/* Featured Supply  */}
       <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-50">
         <div className="flex items-center justify-between mb-8">
-          <h2 style={{ color: '#0A2647' }}>Sản lượng nổi bật</h2>
-          <button onClick={() => onNavigate('supply')} className="text-sm hover:underline" style={{ color: '#00BCD4' }}>Xem tất cả →</button>
+          <h2 style={{ color: "#0A2647" }}>Sản lượng nổi bật</h2>
+          <button
+            onClick={() => onNavigate("supply")}
+            className="text-sm hover:underline"
+            style={{ color: "#00BCD4" }}
+          >
+            Xem tất cả →
+          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredSupply.length > 0 ? (
             filteredSupply.map((supply) => (
-              <SupplyCard key={supply.id} {...supply} onClick={() => onNavigate('product-detail', supply.id)} />
+              <SupplyCard
+                key={supply.id}
+                {...supply}
+                onClick={() => onNavigate("product-detail", supply.id)}
+              />
             ))
           ) : (
-            <p className="col-span-full text-center py-10 text-gray-400 italic">Không tìm thấy sản lượng phù hợp.</p>
+            <p className="col-span-full text-center py-10 text-gray-400 italic">
+              Không tìm thấy sản lượng phù hợp.
+            </p>
           )}
         </div>
       </section>
@@ -231,8 +299,14 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
       {/* Latest Products  */}
       <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h2 style={{ color: '#0A2647' }}>Sản phẩm mới nhất</h2>
-          <button onClick={() => onNavigate('retail')} className="text-sm hover:underline" style={{ color: '#00BCD4' }}>Xem tất cả →</button>
+          <h2 style={{ color: "#0A2647" }}>Sản phẩm mới nhất</h2>
+          <button
+            onClick={() => onNavigate("retail")}
+            className="text-sm hover:underline"
+            style={{ color: "#00BCD4" }}
+          >
+            Xem tất cả →
+          </button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {filteredRetail.length > 0 ? (
@@ -240,21 +314,23 @@ export function Homepage({ onNavigate, onAddToCart, products: passedProducts }) 
               <ProductCard
                 key={product.id}
                 {...product}
-                onClick={() => onNavigate('product-detail', product.id)}
+                onClick={() => onNavigate("product-detail", product.id)}
                 onAddToCart={() => {
                   if (onAddToCart) {
-                    const rawPrice = String(product.price || '0');
-                    const cleanPrice = Number(rawPrice.replace(/[^0-9]/g, ''));
+                    const rawPrice = String(product.price || "0");
+                    const cleanPrice = Number(rawPrice.replace(/[^0-9]/g, ""));
                     onAddToCart({
                       ...product,
-                      price: cleanPrice 
+                      price: cleanPrice,
                     });
                   }
                 }}
               />
             ))
           ) : (
-            <p className="col-span-full text-center py-10 text-gray-400 italic">Không tìm thấy sản phẩm phù hợp.</p>
+            <p className="col-span-full text-center py-10 text-gray-400 italic">
+              Không tìm thấy sản phẩm phù hợp.
+            </p>
           )}
         </div>
       </section>
