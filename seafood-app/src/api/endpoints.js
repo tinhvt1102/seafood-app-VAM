@@ -78,6 +78,10 @@ export const ENDPOINTS = {
     PRODUCT_SUMMARY: (productId) => `/Reviews/product/${productId}/summary`,
     SELLER_SUMMARY: (sellerId) => `/Reviews/seller/${sellerId}/summary`,
     CAN_REVIEW: '/Reviews/can-review',
+  },
+  USERS: {
+    LIST: '/Users',
+    TOGGLE_STATUS: (id) => `/Users/customer-status/${id}`,
   }
 };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Users,
   Package,
@@ -14,19 +14,18 @@ import {
   Search,
   BarChart3,
   Settings,
-  AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
   FileText,
   Building,
   ExternalLink,
   Loader2,
-  Check,
   X,
   User,
+  ShoppingBag,
+  RefreshCw,
 } from "lucide-react";
 import {
-  LineChart,
   Line,
   BarChart,
   Bar,
@@ -43,166 +42,32 @@ import {
 } from "recharts";
 import { toast } from "react-hot-toast";
 import { profileApi } from "../../api/profile";
+import { usersApi } from "../../api/users";
+import { ordersApi } from "../../api/orders";
+import { productApi } from "../../api/products";
 
-// ==================== MOCK DATA ====================
+// ==================== HELPER FUNCTIONS ====================
 
-const revenueData = [
-  { month: "T1", revenue: 180, orders: 95 },
-  { month: "T2", revenue: 220, orders: 112 },
-  { month: "T3", revenue: 195, orders: 98 },
-  { month: "T4", revenue: 310, orders: 145 },
-  { month: "T5", revenue: 280, orders: 132 },
-  { month: "T6", revenue: 365, orders: 168 },
-];
+const extractList = (res) => {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.items)) return res.items;
+  if (Array.isArray(res.data)) return res.data;
+  return [];
+};
 
-const orderStatusData = [
-  { name: "Đã giao", value: 245, color: "#059669" },
-  { name: "Đang giao", value: 48, color: "#2563EB" },
-  { name: "Chờ xác nhận", value: 32, color: "#D97706" },
-  { name: "Đã hủy", value: 15, color: "#DC2626" },
-];
+const formatDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  try {
+    return new Date(dateStr).toLocaleDateString("vi-VN");
+  } catch {
+    return dateStr;
+  }
+};
 
-const trafficData = [
-  { day: "T2", visitors: 420 },
-  { day: "T3", visitors: 380 },
-  { day: "T4", visitors: 510 },
-  { day: "T5", visitors: 470 },
-  { day: "T6", visitors: 590 },
-  { day: "T7", visitors: 680 },
-  { day: "CN", visitors: 550 },
-];
-
-const users = [
-  {
-    id: 1,
-    name: "Nguyễn Văn A",
-    email: "nguyenvana@gmail.com",
-    role: "buyer",
-    status: "active",
-    joinDate: "15/01/2026",
-    orders: 23,
-  },
-  {
-    id: 2,
-    name: "Trần Thị B",
-    email: "tranthib@gmail.com",
-    role: "farmer",
-    status: "active",
-    joinDate: "20/01/2026",
-    orders: 0,
-  },
-  {
-    id: 3,
-    name: "Lê Văn C",
-    email: "levanc@gmail.com",
-    role: "business",
-    status: "active",
-    joinDate: "02/02/2026",
-    orders: 45,
-  },
-  {
-    id: 4,
-    name: "Phạm Thị D",
-    email: "phamthid@gmail.com",
-    role: "buyer",
-    status: "inactive",
-    joinDate: "10/02/2026",
-    orders: 5,
-  },
-  {
-    id: 5,
-    name: "Hoàng Văn E",
-    email: "hoangvane@gmail.com",
-    role: "farmer",
-    status: "active",
-    joinDate: "28/02/2026",
-    orders: 0,
-  },
-  {
-    id: 6,
-    name: "Võ Thị F",
-    email: "vothif@gmail.com",
-    role: "buyer",
-    status: "active",
-    joinDate: "05/03/2026",
-    orders: 12,
-  },
-];
-
-const recentOrders = [
-  {
-    id: "DH001",
-    customer: "Nguyễn Văn A",
-    products: "Tôm sú size 20-25",
-    quantity: "5 kg",
-    total: "2.250.000đ",
-    status: "Đã giao",
-    date: "22/06/2026",
-  },
-  {
-    id: "DH002",
-    customer: "Lê Văn C",
-    products: "Cá Tra phi lê",
-    quantity: "50 kg",
-    total: "4.250.000đ",
-    status: "Đang giao",
-    date: "22/06/2026",
-  },
-  {
-    id: "DH003",
-    customer: "Võ Thị F",
-    products: "Cua biển Cà Mau",
-    quantity: "3 kg",
-    total: "960.000đ",
-    status: "Chờ xác nhận",
-    date: "21/06/2026",
-  },
-  {
-    id: "DH004",
-    customer: "Phạm Thị D",
-    products: "Mực ống tươi",
-    quantity: "2 kg",
-    total: "520.000đ",
-    status: "Đã giao",
-    date: "21/06/2026",
-  },
-  {
-    id: "DH005",
-    customer: "Nguyễn Văn A",
-    products: "Ghẹ xanh",
-    quantity: "4 kg",
-    total: "1.360.000đ",
-    status: "Đã hủy",
-    date: "20/06/2026",
-  },
-];
-
-const pendingApprovals = [
-  {
-    id: "BD001",
-    seller: "Trần Thị B",
-    type: "supply",
-    name: "Tôm sú VietGAP — 5 tấn",
-    date: "22/06/2026",
-    description: "Tôm sú nuôi ao đất, VietGAP, size 20-25 con/kg, vùng Cà Mau",
-  },
-  {
-    id: "BD002",
-    seller: "Hoàng Văn E",
-    type: "product",
-    name: "Cá Tra phi lê đông lạnh",
-    date: "21/06/2026",
-    description: "Cá tra phi lê bỏ da, đóng gói 1kg/túi, đông lạnh -18°C",
-  },
-  {
-    id: "BD003",
-    seller: "Trần Thị B",
-    type: "supply",
-    name: "Cua biển — 2 tấn",
-    date: "20/06/2026",
-    description: "Cua biển loại 1, size 300-500g/con, Kiên Giang",
-  },
-];
+const formatPrice = (amount) => {
+  return (amount || 0).toLocaleString("vi-VN") + "đ";
+};
 
 // ==================== COMPONENTS ====================
 
@@ -214,6 +79,7 @@ function StatCard({
   changeType,
   gradient,
   borderColor,
+  loading = false,
 }) {
   return (
     <div
@@ -242,36 +108,56 @@ function StatCard({
         )}
       </div>
       <p className="text-sm text-gray-600 mb-1">{label}</p>
-      <p className="text-2xl font-bold" style={{ color: "#0A2647" }}>
-        {value}
-      </p>
+      {loading ? (
+        <div className="h-8 flex items-center">
+          <Loader2 className="w-5 h-5 animate-spin text-cyan-600" />
+        </div>
+      ) : (
+        <p className="text-2xl font-bold" style={{ color: "#0A2647" }}>
+          {value}
+        </p>
+      )}
     </div>
   );
 }
 
 function StatusBadge({ status }) {
+  const normalized = (status || "").toLowerCase();
   const config = {
-    "Đã giao": "bg-green-100 text-green-700",
-    "Đang giao": "bg-blue-100 text-blue-700",
-    "Chờ xác nhận": "bg-yellow-100 text-yellow-700",
-    "Đã hủy": "bg-red-100 text-red-700",
+    "đã giao": "bg-green-100 text-green-700",
+    completed: "bg-green-100 text-green-700",
+    "đang giao": "bg-blue-100 text-blue-700",
+    shipping: "bg-blue-100 text-blue-700",
+    "chờ xác nhận": "bg-yellow-100 text-yellow-700",
+    pending: "bg-yellow-100 text-yellow-700",
+    confirmed: "bg-teal-100 text-teal-700",
+    "đã hủy": "bg-red-100 text-red-700",
+    cancelled: "bg-red-100 text-red-700",
     active: "bg-green-100 text-green-700",
     inactive: "bg-red-100 text-red-700",
   };
+
+  const textMap = {
+    completed: "Đã giao",
+    shipping: "Đang giao",
+    pending: "Chờ xác nhận",
+    confirmed: "Đã xác nhận",
+    cancelled: "Đã hủy",
+    active: "Hoạt động",
+    inactive: "Ngưng",
+  };
+
   return (
     <span
-      className={`px-2.5 py-1 rounded-full text-xs font-medium ${config[status] || "bg-gray-100 text-gray-700"}`}
+      className={`px-2.5 py-1 rounded-full text-xs font-medium ${config[normalized] || "bg-gray-100 text-gray-700"}`}
     >
-      {status === "active"
-        ? "Hoạt động"
-        : status === "inactive"
-          ? "Ngưng"
-          : status}
+      {textMap[normalized] || status}
     </span>
   );
 }
 
 function RoleBadge({ role }) {
+  const normalized = (role || "").toLowerCase();
   const config = {
     buyer: {
       bg: "bg-cyan-50",
@@ -279,11 +165,23 @@ function RoleBadge({ role }) {
       border: "border-cyan-200",
       label: "Người mua",
     },
+    customer: {
+      bg: "bg-cyan-50",
+      text: "text-cyan-700",
+      border: "border-cyan-200",
+      label: "Khách hàng",
+    },
     farmer: {
       bg: "bg-emerald-50",
       text: "text-emerald-700",
       border: "border-emerald-200",
       label: "Người nuôi",
+    },
+    seller: {
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      border: "border-emerald-200",
+      label: "Người bán",
     },
     business: {
       bg: "bg-purple-50",
@@ -298,7 +196,7 @@ function RoleBadge({ role }) {
       label: "Admin",
     },
   };
-  const c = config[role] || config.buyer;
+  const c = config[normalized] || config.buyer;
   return (
     <span
       className={`px-2.5 py-1 rounded-full text-xs font-medium border ${c.bg} ${c.text} ${c.border}`}
@@ -324,7 +222,9 @@ function CustomTooltip({ active, payload, label, suffix = "" }) {
         <p key={idx} className="text-sm" style={{ color: item.color }}>
           {item.name}:{" "}
           <span className="font-bold">
-            {item.value.toLocaleString("vi-VN")}
+            {typeof item.value === "number"
+              ? item.value.toLocaleString("vi-VN")
+              : item.value}
             {suffix}
           </span>
         </p>
@@ -339,15 +239,62 @@ export function AdminDashboardPage({ onNavigate }) {
   const [activeTab, setActiveTab] = useState("users");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Profile approvals state
+  // Loading states
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
+
+  // Main Data States
+  const [usersList, setUsersList] = useState([]);
+  const [ordersList, setOrdersList] = useState([]);
+  const [approvedProductsCount, setApprovedProductsCount] = useState(0);
+
+  // Approvals State
   const [approvalCategory, setApprovalCategory] = useState("profiles"); // 'profiles' | 'listings'
   const [profileType, setProfileType] = useState("seller"); // 'seller' | 'business'
   const [pendingSellers, setPendingSellers] = useState([]);
   const [pendingBusinesses, setPendingBusinesses] = useState([]);
+  const [pendingProductsList, setPendingProductsList] = useState([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
+
+  // Action Loading States
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [togglingUserId, setTogglingUserId] = useState(null);
+  const [approvingProductId, setApprovingProductId] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
 
+  // Fetch Dashboard Data
+  const fetchDashboardData = async () => {
+    setLoadingDashboard(true);
+    try {
+      const [usersRes, ordersRes, approvedProductsRes, pendingProductsRes] =
+        await Promise.all([
+          usersApi.getAllUsers({ pageSize: 100 }).catch(() => []),
+          ordersApi.getAllOrders({ pageSize: 100 }).catch(() => []),
+          productApi
+            .getProducts({ status: "approved", pageSize: 100 })
+            .catch(() => []),
+          productApi
+            .getProducts({ status: "pending", pageSize: 100 })
+            .catch(() => []),
+        ]);
+
+      setUsersList(extractList(usersRes));
+      setOrdersList(extractList(ordersRes));
+
+      const appProdList = extractList(approvedProductsRes);
+      setApprovedProductsCount(
+        approvedProductsRes?.totalCount || appProdList.length,
+      );
+
+      setPendingProductsList(extractList(pendingProductsRes));
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu Admin Dashboard:", error);
+      toast.error("Không thể lấy toàn bộ dữ liệu bảng điều khiển.");
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
+  // Fetch Pending Profiles
   const fetchPendingProfiles = async () => {
     setLoadingProfiles(true);
     try {
@@ -357,13 +304,8 @@ export function AdminDashboardPage({ onNavigate }) {
           .getPendingBusinessProfiles(1, 50)
           .catch(() => ({ items: [] })),
       ]);
-      setPendingSellers(
-        sellersRes.items || (Array.isArray(sellersRes) ? sellersRes : []),
-      );
-      setPendingBusinesses(
-        businessesRes.items ||
-          (Array.isArray(businessesRes) ? businessesRes : []),
-      );
+      setPendingSellers(extractList(sellersRes));
+      setPendingBusinesses(extractList(businessesRes));
     } catch (error) {
       console.error("Lỗi khi tải danh sách hồ sơ chờ duyệt:", error);
     } finally {
@@ -372,11 +314,17 @@ export function AdminDashboardPage({ onNavigate }) {
   };
 
   useEffect(() => {
+    fetchDashboardData();
+    fetchPendingProfiles();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === "approvals") {
       fetchPendingProfiles();
     }
   }, [activeTab]);
 
+  // Handlers for Profile Approvals
   const handleApproveSeller = async (id, isApproved) => {
     setActionLoadingId(`seller-${id}`);
     try {
@@ -411,14 +359,185 @@ export function AdminDashboardPage({ onNavigate }) {
     }
   };
 
+  // Handler for User Status Toggle
+  const handleToggleUserStatus = async (user) => {
+    setTogglingUserId(user.id);
+    try {
+      await usersApi.updateCustomerStatus(user.id);
+      const newStatus = user.status === "active" ? "inactive" : "active";
+      toast.success(
+        `Đã ${newStatus === "active" ? "kích hoạt" : "ngưng"} tài khoản ${user.name || user.email}!`,
+      );
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u)),
+      );
+    } catch (error) {
+      toast.error(error.message || "Cập nhật trạng thái người dùng thất bại.");
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
+  // Handler for Product Approval
+  const handleApproveProduct = async (productId, isApproved) => {
+    setApprovingProductId(productId);
+    try {
+      await productApi.approveProduct(productId, {
+        status: isApproved ? "approved" : "rejected",
+      });
+      toast.success(
+        isApproved ? "Đã duyệt bài đăng sản phẩm!" : "Đã từ chối bài đăng!",
+      );
+      setPendingProductsList((prev) => prev.filter((p) => p.id !== productId));
+      if (isApproved) {
+        setApprovedProductsCount((prev) => prev + 1);
+      }
+    } catch (error) {
+      toast.error(error.message || "Duyệt bài đăng thất bại.");
+    } finally {
+      setApprovingProductId(null);
+    }
+  };
+
+  // Derived Metrics & Charts Data
+  const totalPendingProfiles =
+    pendingSellers.length + pendingBusinesses.length;
+  const totalPendingListings = pendingProductsList.length;
+
+  const summaryStats = useMemo(() => {
+    const totalUsers = usersList.length;
+    const totalOrders = ordersList.length;
+
+    // Total revenue sum
+    const totalRevenue = ordersList.reduce((sum, o) => {
+      if (o.status !== "cancelled") {
+        return sum + Number(o.totalPrice || 0);
+      }
+      return sum;
+    }, 0);
+
+    const completedOrdersCount = ordersList.filter(
+      (o) => (o.status || "").toLowerCase() === "completed",
+    ).length;
+
+    const completionRate =
+      totalOrders > 0
+        ? Math.round((completedOrdersCount / totalOrders) * 100)
+        : 0;
+
+    return {
+      totalUsers,
+      totalOrders,
+      totalRevenue,
+      activeProducts: approvedProductsCount,
+      totalPending: totalPendingProfiles + totalPendingListings,
+      completionRate: `${completionRate}%`,
+    };
+  }, [
+    usersList,
+    ordersList,
+    approvedProductsCount,
+    totalPendingProfiles,
+    totalPendingListings,
+  ]);
+
+  // Aggregate Revenue Chart (last 6 months)
+  const revenueChartData = useMemo(() => {
+    const monthsMap = {};
+    const today = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const label = `T${d.getMonth() + 1}`;
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      monthsMap[key] = { month: label, revenue: 0, orders: 0 };
+    }
+
+    ordersList.forEach((o) => {
+      if ((o.status || "").toLowerCase() === "cancelled") return;
+      const date = o.orderDate ? new Date(o.orderDate) : null;
+      if (!date || isNaN(date.getTime())) return;
+      const key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+      if (monthsMap[key]) {
+        monthsMap[key].revenue += Number(o.totalPrice || 0) / 1000000; // in Millions
+        monthsMap[key].orders += 1;
+      }
+    });
+
+    return Object.values(monthsMap).map((m) => ({
+      ...m,
+      revenue: Math.round(m.revenue * 10) / 10,
+    }));
+  }, [ordersList]);
+
+  // Aggregate Order Status Pie Chart
+  const orderStatusChartData = useMemo(() => {
+    const counts = {
+      completed: 0,
+      shipping: 0,
+      pending: 0,
+      cancelled: 0,
+    };
+
+    ordersList.forEach((o) => {
+      const st = (o.status || "").toLowerCase();
+      if (st === "completed" || st === "đã giao") counts.completed++;
+      else if (st === "shipping" || st === "đang giao") counts.shipping++;
+      else if (st === "cancelled" || st === "đã hủy") counts.cancelled++;
+      else counts.pending++;
+    });
+
+    return [
+      { name: "Đã giao", value: counts.completed, color: "#059669" },
+      { name: "Đang giao", value: counts.shipping, color: "#2563EB" },
+      { name: "Chờ xác nhận", value: counts.pending, color: "#D97706" },
+      { name: "Đã hủy", value: counts.cancelled, color: "#DC2626" },
+    ];
+  }, [ordersList]);
+
+  // Traffic / Activity Chart Data (Mon-Sun)
+  const trafficChartData = useMemo(() => {
+    const daysMap = {
+      1: { day: "T2", visitors: 0 },
+      2: { day: "T3", visitors: 0 },
+      3: { day: "T4", visitors: 0 },
+      4: { day: "T5", visitors: 0 },
+      5: { day: "T6", visitors: 0 },
+      6: { day: "T7", visitors: 0 },
+      0: { day: "CN", visitors: 0 },
+    };
+
+    ordersList.forEach((o) => {
+      const date = o.orderDate ? new Date(o.orderDate) : null;
+      if (date && !isNaN(date.getTime())) {
+        daysMap[date.getDay()].visitors += 1;
+      }
+    });
+
+    usersList.forEach((u) => {
+      const date = u.createdAt ? new Date(u.createdAt) : null;
+      if (date && !isNaN(date.getTime())) {
+        daysMap[date.getDay()].visitors += 1;
+      }
+    });
+
+    return [
+      daysMap[1],
+      daysMap[2],
+      daysMap[3],
+      daysMap[4],
+      daysMap[5],
+      daysMap[6],
+      daysMap[0],
+    ];
+  }, [ordersList, usersList]);
+
   const today = new Date().toLocaleDateString("vi-VN", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
-
-  const totalPendingProfiles = pendingSellers.length + pendingBusinesses.length;
 
   const tabs = [
     { id: "users", label: "Quản lý người dùng", icon: Users },
@@ -427,14 +546,14 @@ export function AdminDashboardPage({ onNavigate }) {
       id: "approvals",
       label: "Chờ duyệt",
       icon: Clock,
-      badge: totalPendingProfiles + pendingApprovals.length,
+      badge: summaryStats.totalPending,
     },
   ];
 
-  const filteredUsers = users.filter(
+  const filteredUsers = usersList.filter(
     (u) =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()),
+      (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (u.email || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -449,14 +568,28 @@ export function AdminDashboardPage({ onNavigate }) {
                 Admin Dashboard
               </h1>
             </div>
-            <button
-              onClick={() => onNavigate?.("home")}
-              className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gray-100 transition-colors"
-              style={{ color: "#0A2647" }}
-            >
-              <Settings className="w-4 h-4" />
-              Cài đặt hệ thống
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  fetchDashboardData();
+                  fetchPendingProfiles();
+                  toast.success("Đã làm mới dữ liệu hệ thống!");
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg bg-white hover:bg-gray-50 transition-colors shadow-xs"
+                style={{ color: "#0A2647", borderColor: "#e5e7eb" }}
+              >
+                <RefreshCw className="w-4 h-4 text-cyan-600" />
+                Làm mới
+              </button>
+              <button
+                onClick={() => onNavigate?.("home")}
+                className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gray-100 transition-colors"
+                style={{ color: "#0A2647" }}
+              >
+                <Settings className="w-4 h-4" />
+                Cài đặt hệ thống
+              </button>
+            </div>
           </div>
           <p className="text-gray-600 mt-2">
             Tổng quan hoạt động và quản lý hệ thống VAM Seafood Marketplace
@@ -468,54 +601,52 @@ export function AdminDashboardPage({ onNavigate }) {
           <StatCard
             icon={Users}
             label="Tổng người dùng"
-            value="1.247"
-            change="+8.2%"
-            changeType="up"
+            value={summaryStats.totalUsers.toLocaleString("vi-VN")}
+            loading={loadingDashboard}
             gradient="bg-gradient-to-br from-blue-50 to-cyan-50"
             borderColor="#E0F7FA"
           />
           <StatCard
             icon={Package}
             label="Tổng đơn hàng"
-            value="340"
-            change="+15.3%"
-            changeType="up"
+            value={summaryStats.totalOrders.toLocaleString("vi-VN")}
+            loading={loadingDashboard}
             gradient="bg-gradient-to-br from-cyan-50 to-teal-50"
             borderColor="#B2DFDB"
           />
           <StatCard
             icon={DollarSign}
-            label="Doanh thu tháng"
-            value="365M"
-            change="+30.4%"
-            changeType="up"
+            label="Doanh thu hệ thống"
+            value={
+              summaryStats.totalRevenue >= 1000000
+                ? `${(summaryStats.totalRevenue / 1000000).toFixed(1)}M`
+                : formatPrice(summaryStats.totalRevenue)
+            }
+            loading={loadingDashboard}
             gradient="bg-gradient-to-br from-green-50 to-emerald-50"
             borderColor="#D1FAE5"
           />
           <StatCard
             icon={TrendingUp}
             label="Sản phẩm đang bán"
-            value="89"
-            change="+5"
-            changeType="up"
+            value={summaryStats.activeProducts.toLocaleString("vi-VN")}
+            loading={loadingDashboard}
             gradient="bg-gradient-to-br from-purple-50 to-indigo-50"
             borderColor="#E8DAEF"
           />
           <StatCard
             icon={Clock}
             label="Chờ duyệt"
-            value="3"
-            change=""
-            changeType=""
+            value={summaryStats.totalPending.toLocaleString("vi-VN")}
+            loading={loadingDashboard}
             gradient="bg-gradient-to-br from-yellow-50 to-orange-50"
             borderColor="#FEF3C7"
           />
           <StatCard
             icon={ShieldCheck}
             label="Tỷ lệ hoàn thành"
-            value="92%"
-            change="-1.2%"
-            changeType="down"
+            value={summaryStats.completionRate}
+            loading={loadingDashboard}
             gradient="bg-gradient-to-br from-red-50 to-pink-50"
             borderColor="#FEE2E2"
           />
@@ -523,9 +654,9 @@ export function AdminDashboardPage({ onNavigate }) {
 
         {/* ============ CHARTS ============ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Revenue Line Chart */}
+          {/* Revenue Line/Area Chart */}
           <div
-            className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border"
+            className="lg:col-span-2 bg-white rounded-xl shadow-xs p-6 border"
             style={{ borderColor: "#f3f4f6" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -543,7 +674,7 @@ export function AdminDashboardPage({ onNavigate }) {
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: "#00BCD4" }}
                   />
-                  Doanh thu
+                  Doanh thu (M)
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span
@@ -554,131 +685,150 @@ export function AdminDashboardPage({ onNavigate }) {
                 </span>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={revenueData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00BCD4" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#00BCD4" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip suffix="M" />} />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Doanh thu"
-                  stroke="#00BCD4"
-                  strokeWidth={2.5}
-                  fill="url(#colorRevenue)"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="orders"
-                  name="Đơn hàng"
-                  stroke="#0A2647"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {loadingDashboard ? (
+              <div className="h-[280px] flex items-center justify-center text-gray-400">
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={revenueChartData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#00BCD4" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#00BCD4" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip suffix="M" />} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    name="Doanh thu"
+                    stroke="#00BCD4"
+                    strokeWidth={2.5}
+                    fill="url(#colorRevenue)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="orders"
+                    name="Đơn hàng"
+                    stroke="#0A2647"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           {/* Pie Chart — Order Status */}
           <div
-            className="bg-white rounded-xl shadow-sm p-6 border"
+            className="bg-white rounded-xl shadow-xs p-6 border"
             style={{ borderColor: "#f3f4f6" }}
           >
             <h3 className="font-bold mb-1" style={{ color: "#0A2647" }}>
               Trạng thái đơn hàng
             </h3>
             <p className="text-xs text-gray-500 mb-4">
-              Phân bổ theo trạng thái
+              Phân bổ theo trạng thái thực tế
             </p>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={orderStatusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {orderStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            {loadingDashboard ? (
+              <div className="h-[200px] flex items-center justify-center text-gray-400">
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={orderStatusChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {orderStatusChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2 mt-2">
+                  {orderStatusChartData.map((item) => (
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        {item.name}
+                      </span>
+                      <span className="font-semibold" style={{ color: "#0A2647" }}>
+                        {item.value}
+                      </span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2 mt-2">
-              {orderStatusData.map((item) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    {item.name}
-                  </span>
-                  <span className="font-semibold" style={{ color: "#0A2647" }}>
-                    {item.value}
-                  </span>
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Traffic mini chart */}
         <div
-          className="bg-white rounded-xl shadow-sm p-6 border mb-8"
+          className="bg-white rounded-xl shadow-xs p-6 border mb-8"
           style={{ borderColor: "#f3f4f6" }}
         >
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-bold" style={{ color: "#0A2647" }}>
-                Lượt truy cập tuần này
+                Hoạt động hệ thống theo ngày
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                Tổng:{" "}
-                {trafficData
+                Tổng lượt tương tác (Đơn hàng & Tạo mới):{" "}
+                {trafficChartData
                   .reduce((a, b) => a + b.visitors, 0)
-                  .toLocaleString("vi-VN")}{" "}
-                lượt
+                  .toLocaleString("vi-VN")}
               </p>
             </div>
             <Eye className="w-5 h-5" style={{ color: "#00BCD4" }} />
           </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={trafficData} barSize={32}>
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip content={<CustomTooltip suffix=" lượt" />} />
-              <Bar
-                dataKey="visitors"
-                name="Lượt truy cập"
-                fill="#0A2647"
-                radius={[6, 6, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {loadingDashboard ? (
+            <div className="h-[120px] flex items-center justify-center text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin text-cyan-500" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart data={trafficChartData} barSize={32}>
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<CustomTooltip suffix=" hoạt động" />} />
+                <Bar
+                  dataKey="visitors"
+                  name="Tương tác"
+                  fill="#0A2647"
+                  radius={[6, 6, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* ============ TABS ============ */}
         <div
-          className="bg-white rounded-xl shadow-sm overflow-hidden border"
+          className="bg-white rounded-xl shadow-xs overflow-hidden border"
           style={{ borderColor: "#f3f4f6" }}
         >
           {/* Tab nav */}
@@ -725,12 +875,17 @@ export function AdminDashboardPage({ onNavigate }) {
             {activeTab === "users" && (
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-                  <h3
-                    className="text-lg font-bold"
-                    style={{ color: "#0A2647" }}
-                  >
-                    Danh sách người dùng
-                  </h3>
+                  <div>
+                    <h3
+                      className="text-lg font-bold"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Danh sách người dùng hệ thống ({filteredUsers.length})
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Quản lý thông tin & phân quyền tài khoản
+                    </p>
+                  </div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
@@ -738,132 +893,136 @@ export function AdminDashboardPage({ onNavigate }) {
                       placeholder="Tìm theo tên hoặc email..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#00BCD4] w-full sm:w-72"
+                      className="pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#00BCD4] w-full sm:w-72 bg-white"
                       style={{ borderColor: "#e5e7eb" }}
                     />
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr
-                        className="border-b"
-                        style={{ borderColor: "#e5e7eb" }}
-                      >
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Người dùng
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Vai trò
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Trạng thái
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Ngày tham gia
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Đơn hàng
-                        </th>
-                        <th
-                          className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Hành động
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredUsers.map((user) => (
+                {loadingDashboard ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <Loader2 className="w-8 h-8 animate-spin text-cyan-500 mb-2" />
+                    <p className="text-sm">Đang tải danh sách người dùng...</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
                         <tr
-                          key={user.id}
-                          className="border-b hover:bg-gray-50/50 transition-colors"
-                          style={{ borderColor: "#f3f4f6" }}
+                          className="border-b"
+                          style={{ borderColor: "#e5e7eb" }}
                         >
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                                style={{ backgroundColor: "#0A2647" }}
-                              >
-                                {user.name.charAt(0)}
-                              </div>
-                              <div>
-                                <p
-                                  className="text-sm font-semibold"
-                                  style={{ color: "#0A2647" }}
-                                >
-                                  {user.name}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {user.email}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <RoleBadge role={user.role} />
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <StatusBadge status={user.status} />
-                          </td>
-                          <td className="py-3.5 px-4 text-sm text-gray-600">
-                            {user.joinDate}
-                          </td>
-                          <td
-                            className="py-3.5 px-4 text-sm font-semibold"
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
                             style={{ color: "#0A2647" }}
                           >
-                            {user.orders}
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                className="p-1.5 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
-                                title="Xem chi tiết"
-                              >
-                                <Eye className="w-4 h-4 text-gray-500" />
-                              </button>
-                              {user.status === "active" ? (
-                                <button
-                                  className="p-1.5 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
-                                  title="Vô hiệu hóa"
-                                >
-                                  <UserX className="w-4 h-4 text-red-500" />
-                                </button>
-                              ) : (
-                                <button
-                                  className="p-1.5 rounded-md hover:bg-green-50 transition-colors cursor-pointer"
-                                  title="Kích hoạt"
-                                >
-                                  <UserCheck className="w-4 h-4 text-green-600" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
+                            Người dùng
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Vai trò
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Trạng thái
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Số điện thoại
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Địa chỉ
+                          </th>
+                          <th
+                            className="text-right py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Hành động
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredUsers.map((user) => (
+                          <tr
+                            key={user.id}
+                            className="border-b hover:bg-gray-50/50 transition-colors"
+                            style={{ borderColor: "#f3f4f6" }}
+                          >
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                                  style={{ backgroundColor: "#0A2647" }}
+                                >
+                                  {(user.name || user.email || "U")
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </div>
+                                <div>
+                                  <p
+                                    className="text-sm font-semibold"
+                                    style={{ color: "#0A2647" }}
+                                  >
+                                    {user.name || "Chưa cập nhật"}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {user.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <RoleBadge role={user.role} />
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <StatusBadge status={user.status} />
+                            </td>
+                            <td className="py-3.5 px-4 text-sm text-gray-600">
+                              {user.phone || "—"}
+                            </td>
+                            <td className="py-3.5 px-4 text-sm text-gray-600 max-w-xs truncate">
+                              {user.address || "—"}
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {togglingUserId === user.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin text-cyan-600" />
+                                ) : user.status === "active" ? (
+                                  <button
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    className="p-1.5 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                                    title="Tắt trạng thái hoạt động"
+                                  >
+                                    <UserX className="w-4 h-4 text-red-500" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    className="p-1.5 rounded-md hover:bg-green-50 transition-colors cursor-pointer"
+                                    title="Kích hoạt tài khoản"
+                                  >
+                                    <UserCheck className="w-4 h-4 text-green-600" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
-                {filteredUsers.length === 0 && (
+                {!loadingDashboard && filteredUsers.length === 0 && (
                   <div className="text-center py-12 text-gray-500">
                     <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                     <p>Không tìm thấy người dùng phù hợp</p>
@@ -875,105 +1034,141 @@ export function AdminDashboardPage({ onNavigate }) {
             {/* ---- TAB: Orders ---- */}
             {activeTab === "orders" && (
               <div>
-                <h3
-                  className="text-lg font-bold mb-6"
-                  style={{ color: "#0A2647" }}
-                >
-                  Đơn hàng gần đây
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr
-                        className="border-b"
-                        style={{ borderColor: "#e5e7eb" }}
-                      >
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Mã đơn
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Khách hàng
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Sản phẩm
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Số lượng
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Tổng tiền
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Trạng thái
-                        </th>
-                        <th
-                          className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
-                          style={{ color: "#0A2647" }}
-                        >
-                          Ngày
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentOrders.map((order) => (
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3
+                      className="text-lg font-bold"
+                      style={{ color: "#0A2647" }}
+                    >
+                      Đơn hàng gần đây ({ordersList.length})
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Danh sách đơn hàng toàn hệ thống
+                    </p>
+                  </div>
+                </div>
+
+                {loadingDashboard ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                    <Loader2 className="w-8 h-8 animate-spin text-cyan-500 mb-2" />
+                    <p className="text-sm">Đang tải danh sách đơn hàng...</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
                         <tr
-                          key={order.id}
-                          className="border-b hover:bg-gray-50/50 transition-colors"
-                          style={{ borderColor: "#f3f4f6" }}
+                          className="border-b"
+                          style={{ borderColor: "#e5e7eb" }}
                         >
-                          <td
-                            className="py-3.5 px-4 text-sm font-semibold"
-                            style={{ color: "#00BCD4" }}
-                          >
-                            {order.id}
-                          </td>
-                          <td
-                            className="py-3.5 px-4 text-sm"
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
                             style={{ color: "#0A2647" }}
                           >
-                            {order.customer}
-                          </td>
-                          <td className="py-3.5 px-4 text-sm text-gray-600">
-                            {order.products}
-                          </td>
-                          <td className="py-3.5 px-4 text-sm text-gray-600">
-                            {order.quantity}
-                          </td>
-                          <td
-                            className="py-3.5 px-4 text-sm font-semibold"
-                            style={{ color: "#d4183d" }}
+                            Mã đơn
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
                           >
-                            {order.total}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <StatusBadge status={order.status} />
-                          </td>
-                          <td className="py-3.5 px-4 text-sm text-gray-500">
-                            {order.date}
-                          </td>
+                            Khách hàng
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Sản phẩm
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Địa chỉ giao
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Tổng tiền
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Trạng thái
+                          </th>
+                          <th
+                            className="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: "#0A2647" }}
+                          >
+                            Ngày tạo
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {ordersList.map((order) => {
+                          const itemsSummary =
+                            order.orderItems && order.orderItems.length > 0
+                              ? order.orderItems
+                                  .map(
+                                    (i) =>
+                                      `${i.productName || "Sản phẩm"} (x${i.quantity})`,
+                                  )
+                                  .join(", ")
+                              : "Đơn hàng cơ bản";
+
+                          return (
+                            <tr
+                              key={order.id}
+                              className="border-b hover:bg-gray-50/50 transition-colors"
+                              style={{ borderColor: "#f3f4f6" }}
+                            >
+                              <td
+                                className="py-3.5 px-4 text-sm font-semibold"
+                                style={{ color: "#00BCD4" }}
+                              >
+                                #{order.id}
+                              </td>
+                              <td
+                                className="py-3.5 px-4 text-sm font-medium"
+                                style={{ color: "#0A2647" }}
+                              >
+                                {order.buyerName ||
+                                  order.buyerEmail ||
+                                  `Khách #${order.buyerId}`}
+                              </td>
+                              <td className="py-3.5 px-4 text-sm text-gray-600 max-w-xs truncate">
+                                {itemsSummary}
+                              </td>
+                              <td className="py-3.5 px-4 text-sm text-gray-600 max-w-xs truncate">
+                                {order.shippingAddress || "—"}
+                              </td>
+                              <td
+                                className="py-3.5 px-4 text-sm font-semibold"
+                                style={{ color: "#d4183d" }}
+                              >
+                                {formatPrice(order.totalPrice)}
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <StatusBadge status={order.status} />
+                              </td>
+                              <td className="py-3.5 px-4 text-sm text-gray-500">
+                                {formatDate(order.orderDate)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {!loadingDashboard && ordersList.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p>Chưa có đơn hàng nào trong hệ thống</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -993,25 +1188,29 @@ export function AdminDashboardPage({ onNavigate }) {
                       Trung tâm xét duyệt
                     </h3>
                     <p className="text-sm text-gray-500 mt-0.5">
-                      Phê duyệt hồ sơ đăng ký tài khoản và bài đăng thương mại
+                      Phê duyệt hồ sơ đăng ký tài khoản và bài đăng sản phẩm
                     </p>
                   </div>
                   <div className="flex items-center p-1 bg-gray-100 rounded-lg self-start sm:self-auto">
                     <button
                       onClick={() => setApprovalCategory("profiles")}
-                      className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                      className={`px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
                         approvalCategory === "profiles"
-                          ? "bg-white shadow text-[#0A2647]"
+                          ? "bg-white shadow-xs text-[#0A2647]"
                           : "text-gray-500 hover:text-gray-700"
                       }`}
                     >
                       Hồ sơ đăng ký ({totalPendingProfiles})
                     </button>
                     <button
-                      onClick={() => onNavigate?.("product-approval")}
-                      className={`px-4 py-2 text-xs font-semibold rounded-md transition-all text-gray-500 hover:text-gray-700`}
+                      onClick={() => setApprovalCategory("listings")}
+                      className={`px-4 py-2 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                        approvalCategory === "listings"
+                          ? "bg-white shadow-xs text-[#0A2647]"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
                     >
-                      Bài đăng hệ thống
+                      Bài đăng hệ thống ({totalPendingListings})
                     </button>
                   </div>
                 </div>
@@ -1023,9 +1222,9 @@ export function AdminDashboardPage({ onNavigate }) {
                     <div className="flex items-center gap-3 mb-6">
                       <button
                         onClick={() => setProfileType("seller")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                           profileType === "seller"
-                            ? "bg-cyan-500 text-white shadow-sm"
+                            ? "bg-cyan-500 text-white shadow-xs"
                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         }`}
                       >
@@ -1034,9 +1233,9 @@ export function AdminDashboardPage({ onNavigate }) {
                       </button>
                       <button
                         onClick={() => setProfileType("business")}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                           profileType === "business"
-                            ? "bg-purple-600 text-white shadow-sm"
+                            ? "bg-purple-600 text-white shadow-xs"
                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         }`}
                       >
@@ -1275,18 +1474,18 @@ export function AdminDashboardPage({ onNavigate }) {
                   </div>
                 )}
 
-                {/* CATEGORY 2: LISTING APPROVALS */}
+                {/* CATEGORY 2: LISTING APPROVALS (PENDING PRODUCTS) */}
                 {approvalCategory === "listings" && (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm text-gray-500">
-                        Có {pendingApprovals.length} bài đăng sản phẩm & sản
-                        lượng cần phê duyệt
+                        Có {pendingProductsList.length} bài đăng sản phẩm đang
+                        chờ phê duyệt
                       </p>
                     </div>
 
                     <div className="space-y-4">
-                      {pendingApprovals.map((item) => (
+                      {pendingProductsList.map((item) => (
                         <div
                           key={item.id}
                           className="border rounded-xl p-5 hover:shadow-md transition-all duration-200 bg-white"
@@ -1295,56 +1494,62 @@ export function AdminDashboardPage({ onNavigate }) {
                           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                    item.type === "supply"
-                                      ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
-                                      : "bg-purple-50 text-purple-700 border border-purple-200"
-                                  }`}
-                                >
-                                  {item.type === "supply"
-                                    ? "Sản lượng"
-                                    : "Sản phẩm"}
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-cyan-50 text-cyan-700 border border-cyan-200">
+                                  {item.isWholesale ? "Sản lượng" : "Sản phẩm"}
                                 </span>
                                 <span className="text-xs text-gray-400">
                                   #{item.id}
                                 </span>
                               </div>
                               <h4
-                                className="font-semibold mb-1"
+                                className="font-semibold text-lg mb-1"
                                 style={{ color: "#0A2647" }}
                               >
                                 {item.name}
                               </h4>
                               <p className="text-sm text-gray-600 mb-2">
-                                {item.description}
+                                {item.description || "Không có mô tả."}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
+                                <span>
+                                  Giá:{" "}
+                                  <strong style={{ color: "#d4183d" }}>
+                                    {formatPrice(item.price)} / {item.unit || "kg"}
+                                  </strong>
+                                </span>
+                                <span>
+                                  Số lượng: <strong>{item.quantity}</strong>
+                                </span>
                                 <span>
                                   Người đăng:{" "}
                                   <strong className="text-gray-700">
-                                    {item.seller}
+                                    {item.sellerName || `Seller #${item.sellerId}`}
                                   </strong>
                                 </span>
-                                <span>Ngày: {item.date}</span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 sm:flex-shrink-0">
+                            <div className="flex items-center gap-2 sm:flex-shrink-0 pt-2 sm:pt-0">
                               <button
+                                disabled={approvingProductId === item.id}
                                 onClick={() =>
-                                  toast.success("Đã duyệt bài đăng!")
+                                  handleApproveProduct(item.id, true)
                                 }
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
                                 style={{ backgroundColor: "#059669" }}
                               >
-                                <CheckCircle className="w-4 h-4" />
+                                {approvingProductId === item.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="w-4 h-4" />
+                                )}
                                 Duyệt
                               </button>
                               <button
+                                disabled={approvingProductId === item.id}
                                 onClick={() =>
-                                  toast.error("Đã từ chối bài đăng")
+                                  handleApproveProduct(item.id, false)
                                 }
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-red-50 transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
                                 style={{
                                   borderColor: "#DC2626",
                                   color: "#DC2626",
@@ -1358,13 +1563,18 @@ export function AdminDashboardPage({ onNavigate }) {
                         </div>
                       ))}
 
-                      {pendingApprovals.length === 0 && (
+                      {pendingProductsList.length === 0 && (
                         <div
                           className="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed"
                           style={{ borderColor: "#e5e7eb" }}
                         >
-                          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                          <p>Không có bài đăng nào đang chờ duyệt</p>
+                          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-400" />
+                          <p className="font-medium text-gray-700">
+                            Không có bài đăng nào đang chờ duyệt
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Tất cả sản phẩm đã được phê duyệt hoặc xử lý.
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1383,7 +1593,7 @@ export function AdminDashboardPage({ onNavigate }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => onNavigate?.("order-management")}
-              className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer"
+              className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer bg-white"
               style={{ borderColor: "#00BCD4" }}
             >
               <Package className="w-8 h-8 mb-3" style={{ color: "#00BCD4" }} />
@@ -1397,7 +1607,7 @@ export function AdminDashboardPage({ onNavigate }) {
 
             <button
               onClick={() => onNavigate?.("product-approval")}
-              className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer"
+              className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer bg-white"
               style={{ borderColor: "#00BCD4" }}
             >
               <BarChart3
@@ -1414,7 +1624,7 @@ export function AdminDashboardPage({ onNavigate }) {
 
             <button
               onClick={() => onNavigate?.("supply")}
-              className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer"
+              className="p-6 border-2 border-dashed rounded-xl hover:bg-blue-50 transition-colors text-left cursor-pointer bg-white"
               style={{ borderColor: "#00BCD4" }}
             >
               <TrendingUp
@@ -1475,7 +1685,7 @@ export function AdminDashboardPage({ onNavigate }) {
                       <img
                         src={selectedDocument.url}
                         alt="Giấy tờ đính kèm"
-                        className="max-w-full max-h-[600px] object-contain rounded-lg shadow-sm"
+                        className="max-w-full max-h-[600px] object-contain rounded-lg shadow-xs"
                       />
                     );
                   }
