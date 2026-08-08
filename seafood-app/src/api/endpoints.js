@@ -67,6 +67,17 @@ export const ENDPOINTS = {
     CHECKOUT: (orderId) => `/Payments/checkout/${orderId}`,
     CREATE: '/Payments',
     GET_BY_ID: (id) => `/Payments/${id}`,
+  },
+  REVIEWS: {
+    LIST: '/Reviews',
+    DETAIL: (id) => `/Reviews/${id}`,
+    CREATE: '/Reviews',
+    UPDATE: (id) => `/Reviews/${id}`,
+    DELETE: (id) => `/Reviews/${id}`,
+    REPLY: (id) => `/Reviews/${id}/reply`,
+    PRODUCT_SUMMARY: (productId) => `/Reviews/product/${productId}/summary`,
+    SELLER_SUMMARY: (sellerId) => `/Reviews/seller/${sellerId}/summary`,
+    CAN_REVIEW: '/Reviews/can-review',
   }
 };
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, Truck, XCircle, ShoppingBag, Loader2, ArrowRight, AlertCircle, RefreshCw, Eye, MapPin, Phone, User, Calendar, X, FileText, ChevronRight } from 'lucide-react';
+import { Package, Clock, CheckCircle2, Truck, XCircle, ShoppingBag, Loader2, ArrowRight, AlertCircle, RefreshCw, Eye, MapPin, Phone, User, Calendar, X, FileText, ChevronRight, Star } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { orderApi } from '../../api/products';
+import { ReviewModal } from '../../components/ReviewModal';
 
 const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1534483509719-3feaee7c30da?q=80&w=800&auto=format&fit=crop';
 
@@ -61,6 +62,7 @@ export function OrderHistoryPage({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [reviewModalState, setReviewModalState] = useState({ isOpen: false, orderId: null, product: null });
 
   const fetchMyOrders = async () => {
     setLoading(true);
@@ -348,6 +350,27 @@ export function OrderHistoryPage({ onNavigate }) {
                         Đã nhận được hàng
                       </button>
                     )}
+
+                    {order.status === 'completed' && (
+                      <button
+                        onClick={() => {
+                          const firstProduct = order.orderItems?.[0];
+                          setReviewModalState({
+                            isOpen: true,
+                            orderId: order.id,
+                            product: firstProduct ? {
+                              id: firstProduct.productId,
+                              name: firstProduct.productName,
+                              image: getOrderItemImage(firstProduct)
+                            } : null
+                          });
+                        }}
+                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-200 cursor-pointer flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Star className="w-3.5 h-3.5 fill-white" />
+                        Đánh giá sản phẩm
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -516,6 +539,18 @@ export function OrderHistoryPage({ onNavigate }) {
             </div>
           </div>
         )}
+
+        {/* Modal Đánh giá sản phẩm */}
+        <ReviewModal
+          isOpen={reviewModalState.isOpen}
+          onClose={() => setReviewModalState({ isOpen: false, orderId: null, product: null })}
+          orderId={reviewModalState.orderId}
+          product={reviewModalState.product}
+          onSuccess={() => {
+            toast.success('Đã gửi đánh giá sản phẩm thành công!');
+            fetchMyOrders();
+          }}
+        />
       </div>
     </div>
   );

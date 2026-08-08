@@ -1,19 +1,44 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck, ArrowLeft } from 'lucide-react';
+import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck, ArrowLeft, Image as ImageIcon, MessageSquare, Filter, ThumbsUp, X } from 'lucide-react';
 import { ProductCard } from '../../components/ProductCard';
 import { productApi } from '../../api/products';
+import { reviewsApi } from '../../api/reviews';
 
 export function ProductDetailPage({ productId, allProducts = [], onNavigate, onAddToCart, onBuyNow }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviewSummary, setReviewSummary] = useState(null);
+  const [reviewsList, setReviewsList] = useState([]);
+  const [activeStarFilter, setActiveStarFilter] = useState('all');
+  const [lightboxImage, setLightboxImage] = useState(null);
 
-  // Mỗi khi đổi sản phẩm, reset lại ảnh được chọn về ảnh đầu tiên (ảnh index 0)
+  // Load Review Summary & Reviews List
   useEffect(() => {
-    setSelectedImage(0);
-    setQuantity(1);
-  }, [productId]);
+    if (!productId) return;
+
+    const fetchReviewsData = async () => {
+      try {
+        const summary = await reviewsApi.getProductSummary(productId);
+        setReviewSummary(summary);
+
+        const filter = { productId, pageNumber: 1, pageSize: 20 };
+        if (activeStarFilter !== 'all' && activeStarFilter !== 'images') {
+          filter.rating = parseInt(activeStarFilter);
+        } else if (activeStarFilter === 'images') {
+          filter.hasImages = true;
+        }
+
+        const res = await reviewsApi.getReviews(filter);
+        setReviewsList(res?.items || res || []);
+      } catch (err) {
+        console.error('Lỗi khi tải thông tin đánh giá:', err);
+      }
+    };
+
+    fetchReviewsData();
+  }, [productId, activeStarFilter]);
 
   // Tải chi tiết sản phẩm từ API
   useEffect(() => {
@@ -350,14 +375,210 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
               </div>
               <button
                 onClick={() => onNavigate('farm-profile', supplierInfo.farmId)}
-                className="px-6 py-2 border rounded-md hover:bg-white transition-colors text-sm font-medium"
+                className="px-6 py-2 border rounded-md hover:bg-white transition-colors text-sm font-medium cursor-pointer"
                 style={{ borderColor: '#0A2647', color: '#0A2647' }}
               >
                 Xem hồ sơ
               </button>
             </div>
           </div>
+
+          {/* Product Reviews & Rating Breakdown Section */}
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <h3 className="text-xl font-extrabold mb-6 text-[#0A2647] flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-[#00BCD4]" />
+              Đánh giá từ khách hàng
+            </h3>
+
+            {/* Summary Overview Card */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-6 bg-gradient-to-br from-slate-50 to-cyan-50/30 rounded-2xl border border-gray-100 mb-8 shadow-xs">
+              
+              {/* Rating Big Badge */}
+              <div className="md:col-span-4 flex flex-col items-center justify-center p-4 text-center border-b md:border-b-0 md:border-r border-gray-200/60">
+                <span className="text-5xl font-black text-[#0A2647]">
+                  {reviewSummary?.averageRating || product.rating || 5.0}
+                </span>
+                <div className="flex items-center gap-1 my-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className="w-5 h-5"
+                      fill={star <= Math.round(reviewSummary?.averageRating || product.rating || 5) ? '#FFD700' : 'none'}
+                      stroke={star <= Math.round(reviewSummary?.averageRating || product.rating || 5) ? '#FFD700' : '#D1D5DB'}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-semibold text-gray-500">
+                  Dựa trên {reviewSummary?.totalReviews || product.reviews || 0} nhận xét
+                </span>
+              </div>
+
+              {/* Progress Bars Breakdown */}
+              <div className="md:col-span-8 space-y-2 flex flex-col justify-center">
+                {[
+                  { star: 5, count: reviewSummary?.fiveStarCount || 0 },
+                  { star: 4, count: reviewSummary?.fourStarCount || 0 },
+                  { star: 3, count: reviewSummary?.threeStarCount || 0 },
+                  { star: 2, count: reviewSummary?.twoStarCount || 0 },
+                  { star: 1, count: reviewSummary?.oneStarCount || 0 }
+                ].map(({ star, count }) => {
+                  const total = reviewSummary?.totalReviews || 1;
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-3 text-xs">
+                      <span className="w-12 font-bold text-gray-600 flex items-center gap-1">
+                        {star} <Star className="w-3 h-3 fill-amber-400 stroke-amber-400" />
+                      </span>
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-amber-400 transition-all duration-500" 
+                          style={{ width: `${pct}%` }} 
+                        />
+                      </div>
+                      <span className="w-10 text-right text-gray-400 font-medium">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-gray-100 pb-4">
+              {[
+                { id: 'all', label: 'Tất cả' },
+                { id: '5', label: '5 Sao' },
+                { id: '4', label: '4 Sao' },
+                { id: '3', label: '3 Sao' },
+                { id: '2', label: '2 Sao' },
+                { id: '1', label: '1 Sao' },
+                { id: 'images', label: 'Có hình ảnh' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveStarFilter(tab.id)}
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border ${
+                    activeStarFilter === tab.id
+                      ? 'bg-[#0A2647] text-white border-[#0A2647] shadow-sm'
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Reviews List */}
+            {reviewsList.length > 0 ? (
+              <div className="space-y-6">
+                {reviewsList.map((review) => (
+                  <div key={review.id} className="p-5 bg-white rounded-2xl border border-gray-100 shadow-xs space-y-3">
+                    
+                    {/* Review Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                          {review.buyerName?.charAt(0)?.toUpperCase() || 'K'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-[#0A2647]">
+                              {review.buyerName || 'Khách hàng'}
+                            </span>
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-bold flex items-center gap-1">
+                              <BadgeCheck className="w-3 h-3" />
+                              Đã mua hàng
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-gray-400 font-medium">
+                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString('vi-VN') : 'Mới đây'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stars */}
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className="w-4 h-4"
+                            fill={s <= review.rating ? '#FFD700' : 'none'}
+                            stroke={s <= review.rating ? '#FFD700' : '#D1D5DB'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review Text */}
+                    {review.comment && (
+                      <p className="text-sm text-gray-700 leading-relaxed pl-1">
+                        {review.comment}
+                      </p>
+                    )}
+
+                    {/* Review Images Grid */}
+                    {review.imageUrls && review.imageUrls.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {review.imageUrls.map((url, idx) => (
+                          <img
+                            key={idx}
+                            src={url}
+                            alt={`Review ${idx}`}
+                            onClick={() => setLightboxImage(url)}
+                            className="w-20 h-20 object-cover rounded-xl border border-gray-200 cursor-pointer hover:opacity-90 hover:scale-105 transition-all shadow-xs"
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Seller Reply Container */}
+                    {review.sellerReply && (
+                      <div className="mt-3 p-4 bg-blue-50/60 border border-blue-100 rounded-xl space-y-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[#0A2647] flex items-center gap-1.5">
+                            <BadgeCheck className="w-4 h-4 text-[#00BCD4]" />
+                            Phản hồi từ Người bán
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {review.sellerRepliedAt ? new Date(review.sellerRepliedAt).toLocaleDateString('vi-VN') : ''}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 leading-relaxed italic">
+                          "{review.sellerReply}"
+                        </p>
+                      </div>
+                    )}
+
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <MessageSquare className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-500">Chưa có đánh giá nào cho bộ lọc này.</p>
+              </div>
+            )}
+
+          </div>
         </div>
+
+        {/* Lightbox Image Preview Modal */}
+        {lightboxImage && (
+          <div 
+            onClick={() => setLightboxImage(null)}
+            className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn cursor-pointer"
+          >
+            <div className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl">
+              <img src={lightboxImage} alt="Full view" className="w-full h-full object-contain max-h-[85vh] rounded-2xl shadow-2xl" />
+              <button 
+                onClick={() => setLightboxImage(null)}
+                className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Similar Products */}
         {similarProducts.length > 0 && (
