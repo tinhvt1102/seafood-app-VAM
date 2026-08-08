@@ -3,6 +3,7 @@ import { Star, MapPin, ShoppingCart, Minus, Plus, BadgeCheck, ArrowLeft, Image a
 import { ProductCard } from '../../components/ProductCard';
 import { productApi } from '../../api/products';
 import { reviewsApi } from '../../api/reviews';
+import { authApi } from '../../api/auth';
 
 export function ProductDetailPage({ productId, allProducts = [], onNavigate, onAddToCart, onBuyNow }) {
   const [quantity, setQuantity] = useState(1);
@@ -49,6 +50,26 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
       try {
         const data = await productApi.getProductById(productId);
         if (data) {
+          let sellerProfId = data.sellerProfileId;
+          let suppName = data.supplierName || data.farmName || data.sellerName;
+          let suppLoc = data.supplierLocation;
+
+          // Tra cứu tự động SellerProfile nếu chưa có sellerProfileId từ backend
+          if (!sellerProfId && data.sellerId) {
+            try {
+              const sellersRes = await authApi.getApprovedSellers({ pageSize: 50 });
+              const sellersList = sellersRes?.items || (Array.isArray(sellersRes) ? sellersRes : []);
+              const matched = sellersList.find(s => s.userId === data.sellerId || String(s.userId) === String(data.sellerId));
+              if (matched) {
+                sellerProfId = matched.id;
+                if (!suppName) suppName = matched.farmName;
+                if (!suppLoc) suppLoc = matched.farmAddress;
+              }
+            } catch (pErr) {
+              console.warn('Không thể tra cứu thông tin trang trại:', pErr);
+            }
+          }
+
           const mapped = {
             id: String(data.id),
             name: data.name,
@@ -57,13 +78,22 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
             unit: data.unit || 'kg',
             image: data.imageUrls?.[0] || data.image || data.imageUrl || 'https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080',
             price: typeof data.price === 'number' ? `${data.price.toLocaleString('vi-VN')}đ/${data.unit || 'kg'}` : data.price,
-            origin: data.origin || 'Việt Nam',
-            rating: data.rating || 5,
-            reviews: data.reviews || 0,
+            origin: data.origin || suppLoc || 'Việt Nam',
+            rating: data.averageRating || data.rating || 5,
+            reviews: data.totalReviews || data.reviews || 0,
             description: data.description || '',
             size: data.size || '',
             harvestDate: data.harvestDate || '',
             images: data.imageUrls || (data.imageUrl ? [data.imageUrl] : []),
+            sellerId: data.sellerId,
+            sellerName: data.sellerName,
+            sellerProfileId: sellerProfId,
+            farmId: data.farmId,
+            farmName: data.farmName,
+            supplierName: suppName,
+            supplierLocation: suppLoc,
+            isSupplierVerified: data.isSupplierVerified,
+            supplierRating: data.supplierRating,
             supplier: data.supplier
           };
           setProduct(mapped);
@@ -92,15 +122,39 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
     return ['https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080'];
   }, [product]);
 
-  // 3. TẠO DỮ LIỆU NHÀ CUNG CẤP MẶC ĐỊNH: Nếu mảng thật thiếu trường 'supplier', tự sinh để giao diện hiển thị mượt mà
+  // 3. TẠO DỮ LIỆU NHÀ CUNG CẤP: Ưu tiên thông tin thật từ API backend
   const supplierInfo = useMemo(() => {
     if (!product) return {};
-    return product.supplier || {
-      name: `Hộ nuôi Hải Sản ${product.origin || 'VietGAP'}`,
-      farmId: '1',
-      verified: true,
-      rating: 5,
-      location: product.origin || 'Nhiều vùng'
+
+    if (product.supplier && typeof product.supplier === 'object') {
+      return {
+        name: product.supplier.name || product.supplierName || product.farmName || product.sellerName || 'Hộ nuôi Hải Sản',
+        farmId: String(product.supplier.farmId || product.supplier.id || product.sellerProfileId || product.farmId || product.sellerId || '1'),
+        verified: product.supplier.verified ?? product.isSupplierVerified ?? true,
+        rating: product.supplier.rating || product.supplierRating || product.rating || 5,
+        location: product.supplier.location || product.supplierLocation || product.origin || 'Việt Nam',
+        avatar: product.supplier.avatar || product.supplier.image || null
+      };
+    }
+
+    const name = product.supplierName 
+      || product.farmName 
+      || product.sellerName 
+      || (product.origin ? `Hộ nuôi Hải Sản ${product.origin}` : 'Hộ nuôi Hải Sản Việt Nam');
+
+    const rawFarmId = product.sellerProfileId || product.farmId || product.sellerId;
+    const farmId = rawFarmId ? String(rawFarmId) : '1';
+    const location = product.supplierLocation || product.origin || 'Việt Nam';
+    const rating = product.supplierRating || product.rating || 5;
+    const verified = product.isSupplierVerified !== undefined ? product.isSupplierVerified : true;
+
+    return {
+      name,
+      farmId,
+      verified,
+      rating,
+      location,
+      avatar: product.supplierAvatar || null
     };
   }, [product]);
 
@@ -345,29 +399,33 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
           {/* Supplier Info */}
           <div className="mt-8 pt-8 border-t" style={{ borderColor: '#e5e7eb' }}>
             <h3 className="text-lg font-bold mb-4" style={{ color: '#0A2647' }}>Thông tin nhà cung cấp</h3>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-cyan-50/40 rounded-xl border border-gray-100 flex-wrap gap-4 shadow-xs">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-[#0A2647] text-white font-black text-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                  {supplierInfo.avatar ? (
+                    <img
+                      src={supplierInfo.avatar}
+                      alt={supplierInfo.name}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    supplierInfo.name ? supplierInfo.name.charAt(0).toUpperCase() : 'H'
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold" style={{ color: '#0A2647' }}>{supplierInfo.name}</span>
+                    <span className="font-bold text-base" style={{ color: '#0A2647' }}>{supplierInfo.name}</span>
                     {supplierInfo.verified && (
                       <BadgeCheck className="w-4 h-4" style={{ color: '#00BCD4' }} />
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-3 text-xs text-gray-600 font-medium">
                     <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3" fill="#FFD700" stroke="#FFD700" />
+                      <Star className="w-3.5 h-3.5" fill="#FFD700" stroke="#FFD700" />
                       {supplierInfo.rating}
                     </span>
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
+                      <MapPin className="w-3.5 h-3.5 text-[#00BCD4]" />
                       {supplierInfo.location}
                     </span>
                   </div>
@@ -375,7 +433,7 @@ export function ProductDetailPage({ productId, allProducts = [], onNavigate, onA
               </div>
               <button
                 onClick={() => onNavigate('farm-profile', supplierInfo.farmId)}
-                className="px-6 py-2 border rounded-md hover:bg-white transition-colors text-sm font-medium cursor-pointer"
+                className="px-6 py-2.5 border rounded-lg bg-white hover:bg-gray-50 transition-all duration-200 text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
                 style={{ borderColor: '#0A2647', color: '#0A2647' }}
               >
                 Xem hồ sơ
