@@ -52,7 +52,7 @@ export function LoginPage({ onNavigate, setCart }) {
           }),
         );
 
-        toast.success(`Đăng nhập thành công!`);
+        toast.success(`Đăng nhập thành công!`, { duration: 1000 });
         const normalizedRole = userRole.toLowerCase();
         if (normalizedRole === "seller" || normalizedRole === "farmer") {
           onNavigate("seller-center");
@@ -124,7 +124,7 @@ export function LoginPage({ onNavigate, setCart }) {
         }),
       );
 
-      toast.success("Đăng nhập qua Google thành công!");
+      toast.success("Đăng nhập qua Google thành công!", { duration: 1000 });
       const normalizedRole = userRole.toLowerCase();
       if (normalizedRole === "seller" || normalizedRole === "farmer") {
         onNavigate("seller-center");

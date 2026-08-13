@@ -178,11 +178,11 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
     }));
 
     try {
-      let createdOrder = null;
+      let createdOrders = null;
 
-      // Gọi API Backend C# để lưu đơn hàng vào Database
+      // Gọi API Backend C# để lưu đơn hàng vào Database (Backend tự động tách đơn theo từng Seller)
       try {
-        createdOrder = await orderApi.createOrder({
+        createdOrders = await orderApi.createOrder({
           shippingAddress: fullAddress || "TP. Hồ Chí Minh",
           orderItems: orderItemsDto,
         });
@@ -193,11 +193,22 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
         );
       }
 
-      const orderId =
-        createdOrder?.id || Math.floor(100000 + Math.random() * 900000);
+      // Đảm bảo createdOrders luôn là mảng (Array)
+      const orderList = Array.isArray(createdOrders)
+        ? createdOrders
+        : createdOrders
+          ? [createdOrders]
+          : [];
+
+      // Lấy id của đơn hàng đầu tiên làm ID đại diện cho giao dịch
+      const primaryOrderId =
+        orderList.length > 0
+          ? orderList[0].id
+          : Math.floor(100000 + Math.random() * 900000);
 
       const orderData = {
-        id: orderId,
+        id: primaryOrderId,
+        orderIds: orderList.map((o) => o.id),
         items: checkoutItems,
         subtotal: subtotal,
         serviceFee: serviceFee,
@@ -218,7 +229,7 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
       if (paymentMethod === "payos") {
         try {
           const res = await paymentApi.createCheckoutUrl(
-            orderId,
+            primaryOrderId,
             Math.round(total),
           );
           if (res?.checkoutUrl) {
@@ -261,7 +272,7 @@ export function CheckoutPage({ onNavigate, cart = [], setCart }) {
 
       toast.success("Đặt hàng thành công! Đơn hàng đã được lưu vào hệ thống.");
       window.scrollTo(0, 0);
-      onNavigate("payment-success", orderId);
+      onNavigate("payment-success", primaryOrderId);
     } catch (error) {
       console.error("Lỗi khi tạo đơn hàng:", error);
       toast.error(
