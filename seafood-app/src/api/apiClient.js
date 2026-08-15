@@ -48,7 +48,7 @@ function getStoredRefreshToken() {
   return refreshToken;
 }
 
-function saveTokens(accessToken, refreshToken) {
+function saveTokens(accessToken, refreshToken, user = null) {
   if (accessToken) localStorage.setItem('token', accessToken);
   if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
   try {
@@ -56,6 +56,9 @@ function saveTokens(accessToken, refreshToken) {
     if (userObj && typeof userObj === 'object') {
       if (accessToken) userObj.token = accessToken;
       if (refreshToken) userObj.refreshToken = refreshToken;
+      if (user && typeof user === 'object') {
+        Object.assign(userObj, user);
+      }
       localStorage.setItem('currentUser', JSON.stringify(userObj));
     }
   } catch {
@@ -99,7 +102,7 @@ async function request(endpoint, options = {}) {
   }
 
   const token = getStoredAccessToken();
-  if (token) {
+  if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -125,13 +128,15 @@ async function request(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const isAuthRefreshEndpoint = endpoint.includes('Auth/refresh-token') || endpoint.includes('auth/refresh-token');
+      const normalizedEndpoint = endpoint.toLowerCase();
+      const isAuthRefreshEndpoint = normalizedEndpoint.includes('auth/refresh-token');
+      const hadToken = Boolean(getStoredAccessToken() || getStoredRefreshToken());
 
       // Handle 401 Unauthorized token expiration
       if (response.status === 401 && !options._isRetry && !isAuthRefreshEndpoint) {
-        const refreshToken = getStoredRefreshToken();
+        const currentRefreshToken = getStoredRefreshToken();
 
-        if (refreshToken) {
+        if (currentRefreshToken) {
           if (isRefreshing) {
             // Queue request while refresh is in progress
             try {
@@ -158,7 +163,10 @@ async function request(endpoint, options = {}) {
             const refreshResponse = await fetch(refreshUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refreshToken }),
+              body: JSON.stringify({ 
+                refreshToken: currentRefreshToken,
+                RefreshToken: currentRefreshToken 
+              }),
             });
 
             if (!refreshResponse.ok) {
@@ -166,14 +174,16 @@ async function request(endpoint, options = {}) {
             }
 
             const refreshData = await refreshResponse.json();
-            const newAccessToken = refreshData.token || refreshData.accessToken;
-            const newRefreshToken = refreshData.refreshToken;
+            // Support both camelCase and PascalCase from .NET Backend
+            const newAccessToken = refreshData.token || refreshData.Token || refreshData.accessToken || refreshData.AccessToken;
+            const newRefreshToken = refreshData.refreshToken || refreshData.RefreshToken || currentRefreshToken;
+            const returnedUser = refreshData.user || refreshData.User || null;
 
             if (!newAccessToken) {
-              throw new Error('Invalid refresh token response');
+              throw new Error('Invalid refresh token response from server');
             }
 
-            saveTokens(newAccessToken, newRefreshToken);
+            saveTokens(newAccessToken, newRefreshToken, returnedUser);
             processQueue(null, newAccessToken);
             isRefreshing = false;
 
@@ -190,10 +200,12 @@ async function request(endpoint, options = {}) {
             processQueue(refreshErr, null);
             isRefreshing = false;
             clearTokens();
-            window.dispatchEvent(new Event('auth-expired'));
+            if (hadToken) {
+              window.dispatchEvent(new Event('auth-expired'));
+            }
             throw new ApiError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 401, null);
           }
-        } else {
+        } else if (hadToken) {
           clearTokens();
           window.dispatchEvent(new Event('auth-expired'));
         }

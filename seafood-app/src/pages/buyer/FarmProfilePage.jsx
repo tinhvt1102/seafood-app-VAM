@@ -64,9 +64,9 @@ export function FarmProfilePage({ farmId, onNavigate, onAddToCart }) {
     coverImage: 'https://images.unsplash.com/photo-1645692396914-4ca9df38cce3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
     avatar: 'https://images.unsplash.com/photo-1703756292793-287f082d3a45?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080',
     location: farmData.farmAddress || sellerInfo.address || 'Việt Nam',
-    rating: 5,
-    reviews: products.length > 0 ? products.length * 4 : 12,
-    verified: farmData.status === 'APPROVED' || farmData.status === 'approved',
+    rating: typeof farmData.supplierRating === 'number' ? farmData.supplierRating : (typeof farmData.rating === 'number' ? farmData.rating : 5),
+    reviews: typeof farmData.totalReviews === 'number' ? farmData.totalReviews : products.reduce((sum, p) => sum + (p.totalReviews || p.reviews || 0), 0),
+    verified: farmData.status === 'APPROVED' || farmData.status === 'approved' || Boolean(farmData.isSupplierVerified),
     certifications: farmData.certificate
       ? (farmData.certificate.startsWith('http') || farmData.certificate.includes('firebase') ? ['Đã xác minh chứng nhận'] : [farmData.certificate])
       : ['VietGAP'],
@@ -106,16 +106,16 @@ export function FarmProfilePage({ farmId, onNavigate, onAddToCart }) {
         name: prod.name,
         price: numericPrice || 100000,
         image: parseImg(prod),
-        origin: prod.origin || farm.location,
+        origin: prod.supplierLocation || prod.origin || farm.location,
         unit: prod.unit || 'kg'
       },
       name: prod.name || `Sản phẩm #${prod.id}`,
       image: parseImg(prod),
-      hoverimage: parseImg(prod),
+      hoverimage: prod.imageUrls?.[1] || parseImg(prod),
       price: formattedPrice,
-      origin: prod.origin || farm.location,
-      rating: prod.rating || 5,
-      reviews: prod.reviews || 18
+      origin: prod.supplierLocation || prod.origin || farm.location,
+      rating: typeof prod.averageRating === 'number' ? prod.averageRating : (prod.rating ?? 0),
+      reviews: typeof prod.totalReviews === 'number' ? prod.totalReviews : (prod.reviews ?? 0)
     };
   });
 

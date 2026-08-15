@@ -52,11 +52,11 @@ export function ProductCard({
             <Star
               key={i}
               className="w-3 h-3"
-              fill={i < rating ? '#FFD700' : 'none'}
-              stroke={i < rating ? '#FFD700' : '#D1D5DB'}
+              fill={i < Math.round(rating || 0) ? '#FFD700' : 'none'}
+              stroke={i < Math.round(rating || 0) ? '#FFD700' : '#D1D5DB'}
             />
           ))}
-          <span className="text-xs text-gray-500 ml-1">({reviews})</span>
+          <span className="text-xs text-gray-500 ml-1">({reviews ?? 0})</span>
         </div>
         
         {/* Giá và Nút thêm vào giỏ hàng */}

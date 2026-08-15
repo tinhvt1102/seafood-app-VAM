@@ -22,7 +22,7 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
       }
 
       // 2. Tự động nhận diện category dựa trên tên nếu dữ liệu tổng hợp từ App.jsx không có thuộc tính 'category'
-      let category = product.category;
+      let category = product.category || product.categoryName;
       if (!category && product.name) {
         const nameLower = product.name.toLowerCase();
         if (nameLower.includes('tôm')) category = 'Tôm';
@@ -32,10 +32,16 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
         else category = 'Hải sản khác';
       }
 
+      const rating = typeof product.averageRating === 'number' ? product.averageRating : (product.rating ?? 0);
+      const reviews = typeof product.totalReviews === 'number' ? product.totalReviews : (product.reviews ?? 0);
+
       return {
         ...product,
         category: category || 'Hải sản khác',
-        numericPrice: numericPrice
+        numericPrice: numericPrice,
+        rating: rating,
+        reviews: reviews,
+        origin: product.supplierLocation || product.origin || 'Việt Nam',
       };
     });
   }, [allProducts]);
@@ -53,7 +59,7 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
       if (origin !== 'Tất cả' && product.origin !== origin) return false;
 
       // 3. Lọc theo số sao đánh giá
-      if ((product.rating || 5) < minRating) return false;
+      if ((product.rating ?? 0) < minRating) return false;
 
       // 4. Lọc theo khoảng giá ngân sách (Dựa trên số numericPrice đã chuẩn hóa sạch)
       if (priceRange === 'Dưới 100.000đ' && product.numericPrice >= 100000) return false;
@@ -171,7 +177,7 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
                 <div>
                   <label className="block text-sm font-bold mb-2" style={{ color: '#0A2647' }}>Đánh giá</label>
                   <div className="space-y-2">
-                    {[5, 4, 3].map((stars) => (
+                    {[0, 5, 4, 3].map((stars) => (
                       <label key={stars} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
                         <input
                           type="radio"
@@ -180,7 +186,7 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
                           onChange={() => setMinRating(stars)}
                           className="text-[#00BCD4] focus:ring-[#00BCD4] w-4 h-4"
                         />
-                        Từ {stars}★ trở lên
+                        {stars === 0 ? 'Tất cả đánh giá' : `Từ ${stars}★ trở lên`}
                       </label>
                     ))}
                   </div>
@@ -220,8 +226,8 @@ export function RetailPage({ allProducts = [], onNavigate, onAddToCart }) {
                       image={product.image}
                       hoverimage={product.hoverimage}
                       origin={product.origin}
-                      rating={product.rating || 5}
-                      reviews={product.reviews || 30}
+                      rating={product.rating}
+                      reviews={product.reviews}
                       price={displayPrice}
                       onClick={() => onNavigate('product-detail', product.id)}
                       onAddToCart={() => onAddToCart({

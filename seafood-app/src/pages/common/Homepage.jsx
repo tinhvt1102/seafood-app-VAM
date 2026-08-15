@@ -80,15 +80,20 @@ export function Homepage({
             item.image ||
             item.imageUrl ||
             "https://images.unsplash.com/photo-1759244566095-d6047dfde9c9?q=80&w=1080",
+          hoverimage: item.imageUrls?.[1] || item.imageUrls?.[0] || "",
           price:
             typeof item.price === "number"
               ? `${item.price.toLocaleString("vi-VN")}đ/kg`
               : item.price,
-          origin: item.origin || "Việt Nam",
-          rating: item.rating || 5,
-          reviews: item.reviews || 0,
+          origin: item.supplierLocation || item.origin || "Việt Nam",
+          rating: typeof item.averageRating === "number" ? item.averageRating : (item.rating ?? 0),
+          reviews: typeof item.totalReviews === "number" ? item.totalReviews : (item.reviews ?? 0),
           isWholesale: Boolean(item.isWholesale || item.isWholeSale),
           description: item.description || "",
+          category: item.categoryName || item.category || "",
+          supplierName: item.supplierName || item.sellerName || "",
+          supplierRating: item.supplierRating || 5,
+          isSupplierVerified: Boolean(item.isSupplierVerified),
         }));
         setApiProducts(mapped);
       } catch (err) {
@@ -122,8 +127,9 @@ export function Homepage({
           size: "Tuyển chọn chất lượng cao",
           harvestTime: "Tươi sống mỗi ngày",
           quantity: `${item.quantity.toLocaleString("vi-VN")} ${item.unit || "kg"}`,
-          location: item.farmName || "Việt Nam",
-          farmerName: item.sellerName || "Hộ nuôi thủy sản",
+          location: item.supplierLocation || item.farmName || item.origin || "Việt Nam",
+          farmerName: item.supplierName || item.sellerName || "Hộ nuôi thủy sản",
+          rating: typeof item.averageRating === "number" ? item.averageRating : 5,
         }));
         setSupplyProducts(mapped);
       } catch (err) {
